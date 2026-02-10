@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - StriveX</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-small" onclick="showDashboardView()" style="cursor: pointer;">
+                    <svg width="32" height="32" viewBox="0 0 50 50" fill="none">
+                        <path d="M25 5L45 15V35L25 45L5 35V15L25 5Z" stroke="url(#gradient1)" stroke-width="3"
+                            fill="none" />
+                        <circle cx="25" cy="25" r="8" fill="url(#gradient2)" />
+                        <defs>
+                            <linearGradient id="gradient1" x1="5" y1="5" x2="45" y2="45">
+                                <stop offset="0%" stop-color="#667eea" />
+                                <stop offset="100%" stop-color="#764ba2" />
+                            </linearGradient>
+                            <linearGradient id="gradient2" x1="17" y1="17" x2="33" y2="33">
+                                <stop offset="0%" stop-color="#f093fb" />
+                                <stop offset="100%" stop-color="#f5576c" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span>StriveX</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="dashboard.html" class="nav-item active">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-label">Dashboard</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showGoalsView(); return false;">
+                        <span class="nav-icon">🎯</span>
+                        <span class="nav-label">Goals</span>
+                        <span class="nav-badge" id="activeGoalsCount">0</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showAnalyticsView(); return false;">
+                        <span class="nav-icon">📈</span>
+                        <span class="nav-label">Analytics</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Quick Actions</div>
+                    <a href="#" class="nav-item" onclick="showNewGoalModal(); return false;">
+                        <span class="nav-icon">➕</span>
+                        <span class="nav-label">New Goal</span>
+                        <span class="nav-key-hint">Alt+G</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="triggerEndOfDay(); return false;">
+                        <span class="nav-icon">📝</span>
+                        <span class="nav-label">End of Day</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar" id="userAvatar">👤</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">Loading...</div>
+                        <div class="user-level">Level <span id="userLevel">1</span></div>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="dashboard-header">
+                <div class="header-left">
+                    <h1>Today's Schedule 🔥</h1>
+                    <p class="page-subtitle" id="currentDate">Loading...</p>
+                </div>
+
+                <div class="header-right">
+                    <div class="stat-card">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="streakCount">0</div>
+                            <div class="stat-label">Day Streak</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">⭐</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="xpCount">0</div>
+                            <div class="stat-label">Total XP</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area" id="dashboardView">
+                <!-- Deadline Warnings -->
+                <div id="deadlineWarnings"></div>
+
+                <!-- Today's Tasks Timeline -->
+                <section class="timeline-section">
+                    <div class="section-header">
+                        <h2>Today's Timeline</h2>
+                        <div class="progress-indicator">
+                            <span><span id="completedTasks">0</span>/<span id="totalTasks">0</span> completed</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline" id="timeline">
+                        <!-- Tasks will be loaded here -->
+                    </div>
+
+                    <div id="emptyState" class="empty-state" style="display: none;">
+                        <div class="empty-icon">🎉</div>
+                        <h3>No tasks scheduled for today</h3>
+                        <p>Create a new goal to get started!</p>
+                        <button class="btn-primary" onclick="showNewGoalModal()">Create Your First Goal</button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Goals View (Hidden by default) -->
+            <div class="content-area" id="goalsView" style="display: none;">
+                <div class="section-header">
+                    <h2>Your Goals 🎯</h2>
+                    <button class="btn-primary" onclick="showNewGoalModal()">+ New Goal</button>
+                </div>
+                <div class="goals-grid" id="goalsGrid">
+                    <!-- Goals will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Analytics View (Hidden by default) -->
+            <div class="content-area" id="analyticsView" style="display: none;">
+                <div class="section-header">
+                    <h2>Performance Analytics 📈</h2>
+                </div>
+                <div class="analytics-grid" id="analyticsGrid">
+                    <div class="stat-card large">
+                        <div class="stat-label">Productivity Score</div>
+                        <div class="stat-value" id="productivityScore">85%</div>
+                    </div>
+                    <div class="analytics-chart-placeholder">
+                        <p>Weekly Progress Chart</p>
+                        <div class="simple-bar-chart" id="weeklyChart"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- New Goal Modal -->
+    <div id="newGoalModal" class="modal">
+        <div class="modal-content">
+            <h2>Create New Goal 🎯</h2>
+            <p class="modal-subtitle">What do you want to achieve?</p>
+
+            <form id="newGoalForm" onsubmit="handleNewGoal(event)">
+                <div class="form-group">
+                    <label>Goal Title</label>
+                    <input type="text" id="goalTitle" placeholder="e.g., Complete Python Basics" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Description (Optional)</label>
+                    <textarea id="goalDescription" rows="3" placeholder="Add more details..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Deadline</label>
+                    <input type="date" id="goalDeadline" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Estimated Hours</label>
+                    <input type="number" id="goalHours" min="1" max="1000" placeholder="e.g., 25" required>
+                </div>
+
+                <button type="submit" class="btn-primary" style="width: 100%;">Create Goal & Generate Schedule</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- End of Day Modal -->
+    <div id="endOfDayModal" class="modal">
+        <div class="modal-content">
+            <h2>End of Day Check 📊</h2>
+            <p class="modal-subtitle">Help StriveX adapt to your patterns</p>
+
+            <form id="endOfDayForm" onsubmit="handleEndOfDaySubmit(event)">
+                <div class="form-group">
+                    <label>How much did you complete today?</label>
+                    <div class="slider-container">
+                        <input type="range" id="completionSlider" min="0" max="100" value="50">
+                        <div class="slider-value"><span id="completionValue">50</span>%</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Screen time today?</label>
+                    <div class="radio-group-inline">
+                        <label class="radio-inline">
+                            <input type="radio" name="screenTime" value="Low" checked>
+                            <span>Low</span>
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" name="screenTime" value="Medium">
+                            <span>Medium</span>
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" name="screenTime" value="High">
+                            <span>High</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Main distraction?</label>
+                    <select id="distractionSelect">
+                        <option value="">None</option>
+                        <option value="Social Media">Social Media</option>
+                        <option value="Gaming">Gaming</option>
+                        <option value="YouTube/Netflix">YouTube/Netflix</option>
+                        <option value="Friends/Family">Friends/Family</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Energy level today?</label>
+                    <div class="energy-selector">
+                        <button type="button" class="energy-btn" data-value="1" onclick="selectEnergy(1)">😴</button>
+                        <button type="button" class="energy-btn" data-value="2" onclick="selectEnergy(2)">😐</button>
+                        <button type="button" class="energy-btn active" data-value="3"
+                            onclick="selectEnergy(3)">🙂</button>
+                        <button type="button" class="energy-btn" data-value="4" onclick="selectEnergy(4)">😊</button>
+                        <button type="button" class="energy-btn" data-value="5" onclick="selectEnergy(5)">🚀</button>
+                    </div>
+                    <input type="hidden" id="energyLevel" value="3">
+                </div>
+
+                <div class="form-group">
+                    <label>Any notes? (Optional)</label>
+                    <textarea id="skipReason" rows="3" placeholder="e.g., Had unexpected commitments..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary" style="width: 100%;">Submit & See Tomorrow's Plan</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+
+</html>

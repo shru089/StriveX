@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onboarding - StriveX</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/onboarding.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="onboarding-container">
+        <!-- Progress Tracking -->
+        <div class="progress-bar-container">
+            <div class="progress-segments">
+                <div class="progress-segment active" id="segment1"></div>
+                <div class="progress-segment" id="segment2"></div>
+                <div class="progress-segment" id="segment3"></div>
+                <div class="progress-segment" id="segment4"></div>
+                <div class="progress-segment" id="segment5"></div>
+            </div>
+        </div>
+
+        <div class="onboarding-content">
+            <!-- Step 1: Welcome -->
+            <div class="onboarding-step active" id="step1">
+                <div class="step-header">
+                    <span class="step-emoji">🚀</span>
+                    <h1>Welcome to StriveX</h1>
+                    <p>Build your professional productivity engine in 2 minutes.</p>
+                </div>
+
+                <div class="step-body">
+                    <div class="welcome-grid">
+                        <div class="welcome-item">
+                            <div class="welcome-icon">📅</div>
+                            <div class="welcome-text">
+                                <h4>Smart Scheduling</h4>
+                                <p>We'll optimize your daily architecture around your peak energy.</p>
+                            </div>
+                        </div>
+                        <div class="welcome-item">
+                            <div class="welcome-icon">🎯</div>
+                            <div class="welcome-text">
+                                <h4>Goal Decomposition</h4>
+                                <p>Turn ambitious business goals into manageable daily sprints.</p>
+                            </div>
+                        </div>
+                        <div class="welcome-item">
+                            <div class="welcome-icon">📈</div>
+                            <div class="welcome-text">
+                                <h4>AI Optimization</h4>
+                                <p>Our engine learns your patterns to eliminate procrastination.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary btn-large" onclick="nextStep()">
+                        Begin Onboarding →
+                    </button>
+                    <p style="text-align: center; margin-top: 1.5rem; font-size: 0.8rem; color: var(--text-tertiary);">
+                        Trusted by top performers to automate discipline.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 2: Daily Schedule -->
+            <div class="onboarding-step" id="step2">
+                <div class="step-header">
+                    <span class="step-emoji">⏰</span>
+                    <h1>Daily Foundation</h1>
+                    <p>When does your high-performance window begin and end?</p>
+                </div>
+
+                <div class="step-body">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="wakeTime">Target Wake Time</label>
+                            <input type="time" id="wakeTime" value="07:00" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sleepTime">Target Sleep Time</label>
+                            <input type="time" id="sleepTime" value="23:00" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Energy Profile</label>
+                        <div class="radio-group">
+                            <label class="radio-card">
+                                <input type="radio" name="energyType" value="morning" checked>
+                                <div class="radio-content">
+                                    <span class="radio-icon">🌅</span>
+                                    <span class="radio-label">Morning</span>
+                                    <span class="radio-description">Peak 06:00 - 12:00</span>
+                                </div>
+                            </label>
+
+                            <label class="radio-card">
+                                <input type="radio" name="energyType" value="night">
+                                <div class="radio-content">
+                                    <span class="radio-icon">🌙</span>
+                                    <span class="radio-label">Night</span>
+                                    <span class="radio-description">Peak 18:00 - 00:00</span>
+                                </div>
+                            </label>
+
+                            <label class="radio-card">
+                                <input type="radio" name="energyType" value="flexible">
+                                <div class="radio-content">
+                                    <span class="radio-icon">⚡</span>
+                                    <span class="radio-label">Adaptive</span>
+                                    <span class="radio-description">Varies by demand</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="prevStep()">← Back</button>
+                        <button class="btn btn-primary" onclick="nextStep()">Confirm Foundation →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Commitments -->
+            <div class="onboarding-step" id="step3">
+                <div class="step-header">
+                    <span class="step-emoji">📅</span>
+                    <h1>Work & Commitments</h1>
+                    <p>Add recurring blocks like office hours, standups, or deep work.</p>
+                </div>
+
+                <div class="step-body">
+                    <div id="commitmentsList"
+                        style="max-height: 350px; overflow-y: auto; margin-bottom: 1.5rem; padding-right: 5px;">
+                        <!-- Commitments grid -->
+                    </div>
+
+                    <button class="btn btn-secondary btn-small" onclick="addCommitment()"
+                        style="width: 100%; border-style: dashed; background: transparent;">
+                        + Add Recurring Block
+                    </button>
+
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="prevStep()">← Back</button>
+                        <button class="btn btn-primary" onclick="nextStep()">Optimize Schedule →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: First Goal -->
+            <div class="onboarding-step" id="step4">
+                <div class="step-header">
+                    <span class="step-emoji">🎯</span>
+                    <h1>Mission Objective</h1>
+                    <p>What is your primary focus for the next 30 days?</p>
+                </div>
+
+                <div class="step-body">
+                    <div class="form-group">
+                        <label for="goalTitle">Objective Title</label>
+                        <input type="text" id="goalTitle" placeholder="e.g., Scale revenue to $10k/mo" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="goalDescription">Brief Strategy (Optional)</label>
+                        <textarea id="goalDescription" rows="2"
+                            placeholder="Key milestones or focus areas..."></textarea>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="goalDeadline">Hard Deadline</label>
+                            <input type="date" id="goalDeadline" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="goalHours">Total Est. Hours</label>
+                            <input type="number" id="goalHours" placeholder="e.g., 100" min="1">
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="prevStep()">← Back</button>
+                        <button class="btn btn-primary" onclick="completeOnboarding()">
+                            Construct My Plan 🚀
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Loading -->
+            <div class="onboarding-step" id="step5">
+                <div class="step-header">
+                    <span class="step-emoji">✨</span>
+                    <h1>Optimizing Engine...</h1>
+                    <p>Our algorithm is aligning your mission with your biology.</p>
+                </div>
+
+                <div class="step-body">
+                    <div class="loading-animation">
+                        <div class="spinner"></div>
+                        <p id="loadingText" style="font-weight: 600; color: var(--primary);">Synchronizing datasets...
+                        </p>
+                    </div>
+
+                    <div class="loading-steps" style="margin-top: 2rem; display: grid; gap: 0.75rem;">
+                        <div class="loading-item success">Profile Analysis</div>
+                        <div class="loading-item success">Commitment Mapping</div>
+                        <div class="loading-item active" id="loadingGoal">Goal Decomposition</div>
+                        <div class="loading-item" id="loadingSchedule">Schedule Optimization</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/onboarding.js"></script>
+</body>
+
+</html>
