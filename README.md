@@ -28,7 +28,7 @@
 
 ### 1. Clone & Setup Backend
 ```bash
-git clone https://github.com/YOUR_USERNAME/StriveX.git
+git clone https://github.com/shru089/StriveX.git
 cd StriveX
 
 # Create virtual environment
@@ -37,7 +37,7 @@ python -m venv .venv
 # source .venv/bin/activate  # macOS/Linux
 
 # Install dependencies
-pip install -r backend/requirements.txt
+pip install -r` backend/requirements.txt
 ```
 
 ### 2. Configure Environment
