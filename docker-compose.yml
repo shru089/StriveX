@@ -1,0 +1,45 @@
+services:
+  # ─── Backend API ─────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: strivex-backend
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-dev-unsafe-change-me}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3001}
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///strivex.db}
+      - PORT=5001
+    volumes:
+      # Persist SQLite DB outside the container
+      - strivex-data:/app/instance
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ─── Frontend Dev Server ──────────────────────────────────────────────────────
+  frontend:
+    image: node:20-alpine
+    container_name: strivex-frontend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    working_dir: /app
+    volumes:
+      - ./frontend:/app/frontend:ro
+      - ./serve_node.js:/app/serve_node.js:ro
+    command: node serve_node.js
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  strivex-data:
+    driver: local

@@ -3,184 +3,423 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StriveX - AI-Powered Productivity</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>StriveX — The Decision Engine</title>
+    <meta name="description"
+        content="StriveX eliminates decision fatigue. It breaks your goals into an intelligent daily schedule, adapts in real-time, and learns your behaviour — so you stop planning and start achieving.">
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#5e6ad2">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="StriveX">
+    <!-- Styles -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(() => console.log('[SW] Registered'))
+                    .catch((err) => console.warn('[SW] Registration failed:', err));
+            });
+        }
+    </script>
 </head>
 
 <body>
-    <!-- Floating Particles Background -->
+    <!-- Animated Background -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
     <div class="particles" id="particles"></div>
 
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <svg width="28" height="28" viewBox="0 0 50 50" fill="none">
+                <path d="M25 5L45 15V35L25 45L5 35V15L25 5Z" stroke="url(#lg1)" stroke-width="3" fill="none" />
+                <circle cx="25" cy="25" r="8" fill="url(#lg2)" />
+                <defs>
+                    <linearGradient id="lg1" x1="5" y1="5" x2="45" y2="45">
+                        <stop offset="0%" stop-color="#667eea" />
+                        <stop offset="100%" stop-color="#764ba2" />
+                    </linearGradient>
+                    <linearGradient id="lg2" x1="17" y1="17" x2="33" y2="33">
+                        <stop offset="0%" stop-color="#f093fb" />
+                        <stop offset="100%" stop-color="#f5576c" />
+                    </linearGradient>
+                </defs>
+            </svg>
+            <span>StriveX</span>
+        </div>
+        <div class="nav-actions">
+            <button class="nav-link" onclick="showAuthModal('login')">Sign In</button>
+            <button class="nav-cta" onclick="showAuthModal('signup')">Get Started Free →</button>
+        </div>
+    </nav>
+
     <div class="landing-container">
-        <!-- Hero Section -->
-        <div class="hero-section">
+
+        <!-- ===== HERO ===== -->
+        <section class="hero-section">
             <div class="hero-content">
-                <div class="logo">
-                    <svg width="50" height="50" viewBox="0 0 50 50" fill="none">
-                        <path d="M25 5L45 15V35L25 45L5 35V15L25 5Z" stroke="url(#gradient1)" stroke-width="3"
-                            fill="none" />
-                        <circle cx="25" cy="25" r="8" fill="url(#gradient2)" />
+                <div class="hero-badge">
+                    <span class="badge-dot"></span>
+                    <span>Powered by Behavioral AI</span>
+                </div>
+
+                <h1 class="hero-title">
+                    The Decision Engine
+                    <span class="hero-title-gradient">that runs your day.</span>
+                </h1>
+
+                <p class="hero-subtitle">
+                    StriveX eliminates decision fatigue. It breaks your goals into an intelligent daily schedule,
+                    adapts in real-time when life happens, and learns your productivity patterns —
+                    so you <strong>stop planning</strong> and <strong>start achieving</strong>.
+                </p>
+
+                <div class="cta-buttons">
+                    <button class="btn btn-primary" onclick="showAuthModal('signup')">
+                        Start Free — No Credit Card
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="m9 18 6-6-6-6" />
+                        </svg>
+                    </button>
+                    <button class="btn btn-secondary" onclick="showAuthModal('login')">Sign In</button>
+                </div>
+
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-number">72%</div>
+                        <div class="stat-label">Avg Goal Completion</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat">
+                        <div class="stat-number">&lt; 2s</div>
+                        <div class="stat-label">Replan Time</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat">
+                        <div class="stat-number">30-day</div>
+                        <div class="stat-label">Behavioral Profile</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat">
+                        <div class="stat-number">0</div>
+                        <div class="stat-label">Decisions to Make</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hero Visual — Dashboard Preview Cards -->
+            <div class="hero-visual">
+                <!-- Main preview card -->
+                <div class="preview-card preview-main">
+                    <div class="preview-header">
+                        <div class="preview-dot red"></div>
+                        <div class="preview-dot amber"></div>
+                        <div class="preview-dot green"></div>
+                        <span class="preview-title">Today's Schedule</span>
+                    </div>
+                    <div class="preview-body">
+                        <div class="preview-task done">
+                            <div class="preview-task-dot"></div>
+                            <div class="preview-task-info">
+                                <span>Python Basics: Functions</span>
+                                <span class="preview-time">09:00 – 12:00</span>
+                            </div>
+                            <div class="preview-check">✓</div>
+                        </div>
+                        <div class="preview-task active">
+                            <div class="preview-task-dot active-dot"></div>
+                            <div class="preview-task-info">
+                                <span>Python: OOP Concepts</span>
+                                <span class="preview-time">13:00 – 17:00</span>
+                            </div>
+                            <div class="preview-progress-mini">
+                                <div class="preview-progress-fill" style="width: 40%"></div>
+                            </div>
+                        </div>
+                        <div class="preview-task">
+                            <div class="preview-task-dot ghost-dot"></div>
+                            <div class="preview-task-info">
+                                <span>Practice Project 1</span>
+                                <span class="preview-time">19:00 – 22:00</span>
+                            </div>
+                            <span class="preview-ghost">👻</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Floating cards -->
+                <div class="floating-card card-1">
+                    <div class="fc-icon">⚡</div>
+                    <div class="fc-text">
+                        <div class="fc-title">Day Replanned</div>
+                        <div class="fc-sub">3 tasks moved · 87% feasible</div>
+                    </div>
+                </div>
+
+                <div class="floating-card card-2">
+                    <div class="fc-icon">🧠</div>
+                    <div class="fc-text">
+                        <div class="fc-title">Pattern Detected</div>
+                        <div class="fc-sub">You focus best 9–11 AM</div>
+                    </div>
+                </div>
+
+                <div class="floating-card card-3">
+                    <svg class="mini-ring" viewBox="0 0 60 60">
+                        <circle cx="30" cy="30" r="24" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="4" />
+                        <circle cx="30" cy="30" r="24" fill="none" stroke="#10b981" stroke-width="4"
+                            stroke-dasharray="150.8" stroke-dashoffset="26" stroke-linecap="round"
+                            transform="rotate(-90 30 30)" />
+                    </svg>
+                    <div class="fc-text">
+                        <div class="fc-title">83% Feasible</div>
+                        <div class="fc-sub">On track for deadline</div>
+                    </div>
+                </div>
+
+                <div class="floating-card card-4">
+                    <div class="fc-icon">🔥</div>
+                    <div class="fc-text">
+                        <div class="fc-title">14 Day Streak</div>
+                        <div class="fc-sub">+150 XP today · Level 4</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== HOW IT WORKS ===== -->
+        <section class="how-section">
+            <div class="section-label">How It Works</div>
+            <h2 class="section-title">Three steps to <span class="gradient-text">zero decision fatigue</span></h2>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">01</div>
+                    <div class="step-icon">🎯</div>
+                    <h3>Set Your Goal</h3>
+                    <p>Tell StriveX what you want to achieve and your deadline. It instantly breaks it into a
+                        week-by-week plan with energy-matched time blocks.</p>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step-card active">
+                    <div class="step-number">02</div>
+                    <div class="step-icon">⚡</div>
+                    <h3>Let It Decide</h3>
+                    <p>Every morning your schedule is already made. If life interrupts, press "Replan My Day" — StriveX
+                        reshuffles everything in under 2 seconds.</p>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step-card">
+                    <div class="step-number">03</div>
+                    <div class="step-icon">🧠</div>
+                    <h3>It Learns You</h3>
+                    <p>After 7 days, StriveX knows when you procrastinate, your peak focus hours, and automatically
+                        adapts future schedules to match your real patterns.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== FEATURES GRID ===== -->
+        <section class="features-section">
+            <div class="section-label">Features</div>
+            <h2 class="section-title">Everything a <span class="gradient-text">proactive OS</span> needs</h2>
+
+            <div class="features-grid">
+                <div class="feature-card feature-large">
+                    <div class="feature-icon-large">⚡</div>
+                    <h3>Replan My Day</h3>
+                    <p>One button. StriveX identifies what's expired, re-schedules every remaining task around your
+                        current time, and shows you exactly what's changed — in under 2 seconds.</p>
+                    <div class="feature-tag">PRD Core Feature</div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⌨️</div>
+                    <h3>NLP Command Bar</h3>
+                    <p>Press Ctrl+K and say "move gym to 6pm" or "add 2 hours deep work". Your schedule updates
+                        instantly.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Feasibility Score</h3>
+                    <p>See a live 0–100% probability you'll hit your deadline. Color-coded risk levels with consequence
+                        messaging.</p>
+                </div>
+
+                <div class="feature-card feature-large">
+                    <div class="feature-icon-large">🧠</div>
+                    <h3>Behavioral Intelligence</h3>
+                    <p>Tracks when you skip, hover, and start late. Builds a 30-day behavioral profile and auto-adjusts
+                        your schedule to match your real-world productivity patterns.</p>
+                    <div class="feature-tag">Stage 4 · Live</div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">👻</div>
+                    <h3>Ghost Mode</h3>
+                    <p>Soft-schedule tasks without committing. They appear in your timeline but don't affect your
+                        feasibility score.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔥</div>
+                    <h3>XP & Levels</h3>
+                    <p>Earn XP per completed task, maintain streaks, and level up. Difficulty multipliers reward hard
+                        work.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🗺️</div>
+                    <h3>Goal Milestones</h3>
+                    <p>Big goals auto-split into weekly milestones with progress check-ins. Always know where you stand.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Privacy First</h3>
+                    <p>Your behavioral data stays on your device. We never sell or share your productivity patterns.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== SOCIAL PROOF ===== -->
+        <section class="proof-section">
+            <div class="proof-cards">
+                <div class="proof-card">
+                    <div class="proof-quote">"Finally stopped missing deadlines. StriveX just tells me what to do and I
+                        do it."</div>
+                    <div class="proof-author">
+                        <div class="proof-avatar">A</div>
+                        <div>
+                            <div class="proof-name">Arjun M.</div>
+                            <div class="proof-role">CS Student, 3rd Year</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="proof-card proof-card-highlight">
+                    <div class="proof-quote">"The replan button alone is worth it. My whole day reshuffles in 2 seconds
+                        when meetings run over."</div>
+                    <div class="proof-author">
+                        <div class="proof-avatar">S</div>
+                        <div>
+                            <div class="proof-name">Shreya K.</div>
+                            <div class="proof-role">Product Manager</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="proof-card">
+                    <div class="proof-quote">"Built a 21-day streak studying for DSA. The XP system makes it feel like a
+                        game."</div>
+                    <div class="proof-author">
+                        <div class="proof-avatar">R</div>
+                        <div>
+                            <div class="proof-name">Rohan D.</div>
+                            <div class="proof-role">SDE Prep, Tier 2 College</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== CTA ===== -->
+        <section class="cta-section">
+            <div class="cta-glow"></div>
+            <h2>Stop deciding. Start doing.</h2>
+            <p>Join thousands building real momentum — no subscriptions, no setup, just your goals.</p>
+            <button class="btn btn-primary btn-xl" onclick="showAuthModal('signup')">
+                Start Free Today →
+            </button>
+        </section>
+
+    </div>
+
+    <!-- ===== AUTH MODAL ===== -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-close" onclick="closeAuthModal()">✕</div>
+
+            <div id="loginForm" class="auth-form">
+                <div class="auth-logo">
+                    <svg width="32" height="32" viewBox="0 0 50 50" fill="none">
+                        <path d="M25 5L45 15V35L25 45L5 35V15L25 5Z" stroke="url(#alg1)" stroke-width="3" fill="none" />
+                        <circle cx="25" cy="25" r="8" fill="url(#alg2)" />
                         <defs>
-                            <linearGradient id="gradient1" x1="5" y1="5" x2="45" y2="45">
+                            <linearGradient id="alg1" x1="5" y1="5" x2="45" y2="45">
                                 <stop offset="0%" stop-color="#667eea" />
                                 <stop offset="100%" stop-color="#764ba2" />
                             </linearGradient>
-                            <linearGradient id="gradient2" x1="17" y1="17" x2="33" y2="33">
+                            <linearGradient id="alg2" x1="17" y1="17" x2="33" y2="33">
                                 <stop offset="0%" stop-color="#f093fb" />
                                 <stop offset="100%" stop-color="#f5576c" />
                             </linearGradient>
                         </defs>
                     </svg>
-                    <h1>StriveX</h1>
+                    <span>StriveX</span>
                 </div>
-
-                <h2 class="hero-title">Your AI-Powered Productivity Partner</h2>
-                <p class="hero-subtitle">
-                    Stop planning. Start achieving.<br>
-                    StriveX intelligently plans your day and adapts when life happens.
-                </p>
-
-                <div class="cta-buttons">
-                    <button class="btn btn-primary" onclick="showAuthModal('signup')">
-                        Get Started Free
-                    </button>
-                    <button class="btn btn-secondary" onclick="showAuthModal('login')">
-                        Sign In
-                    </button>
-                </div>
-
-                <div class="hero-stats">
-                    <div class="stat">
-                        <div class="stat-number">5x</div>
-                        <div class="stat-label">Better Planning</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-number">80%</div>
-                        <div class="stat-label">Task Completion</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-number">24/7</div>
-                        <div class="stat-label">Adaptive AI</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="hero-visual">
-                <div class="floating-card card-1">
-                    <div class="card-icon">✅</div>
-                    <div class="card-text">Task Completed +50 XP</div>
-                </div>
-                <div class="floating-card card-2">
-                    <div class="card-icon">🔥</div>
-                    <div class="card-text">7 Day Streak!</div>
-                </div>
-                <div class="floating-card card-3">
-                    <div class="card-icon">🎯</div>
-                    <div class="card-text">On Track for Deadline</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Features Section -->
-        <div class="features-section">
-            <h3 class="section-title">Why StriveX?</h3>
-
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🧠</div>
-                    <h4>Smart Scheduling</h4>
-                    <p>AI breaks your goals into achievable daily tasks, perfectly fitted around your life.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🔄</div>
-                    <h4>Auto-Adaptation</h4>
-                    <p>Procrastinated today? StriveX automatically adjusts tomorrow's plan. No guilt, just progress.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">⚠️</div>
-                    <h4>Deadline Protection</h4>
-                    <p>Never miss a deadline again. StriveX warns you early and helps you catch up.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h4>Energy Matching</h4>
-                    <p>Morning person? Night owl? Tasks are scheduled when you're most productive.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🎮</div>
-                    <h4>Gamification</h4>
-                    <p>Earn XP, build streaks, and level up. Productivity has never been this fun.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
-                    <h4>Privacy First</h4>
-                    <p>Your data is encrypted and secure. We never sell your information.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Auth Modal -->
-    <div id="authModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeAuthModal()">&times;</span>
-
-            <div id="loginForm" class="auth-form">
-                <h2>Welcome Back</h2>
+                <h2>Welcome back</h2>
                 <p class="form-subtitle">Sign in to continue your journey</p>
-
                 <form onsubmit="handleLogin(event)">
                     <div class="form-group">
                         <label for="loginEmail">Email</label>
                         <input type="email" id="loginEmail" required placeholder="you@example.com">
                     </div>
-
                     <div class="form-group">
                         <label for="loginPassword">Password</label>
                         <input type="password" id="loginPassword" required placeholder="••••••••">
                     </div>
-
-                    <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+                    <button type="submit" class="btn btn-primary btn-full">Sign In →</button>
                 </form>
-
-                <p class="form-switch">
-                    Don't have an account?
-                    <a href="#" onclick="switchAuthMode('signup')">Sign up</a>
-                </p>
+                <p class="form-switch">Don't have an account? <a href="#" onclick="switchAuthMode('signup')">Sign up
+                        free</a></p>
             </div>
 
             <div id="signupForm" class="auth-form" style="display: none;">
-                <h2>Get Started</h2>
-                <p class="form-subtitle">Create your account in seconds</p>
-
+                <div class="auth-logo">
+                    <svg width="32" height="32" viewBox="0 0 50 50" fill="none">
+                        <path d="M25 5L45 15V35L25 45L5 35V15L25 5Z" stroke="url(#blg1)" stroke-width="3" fill="none" />
+                        <circle cx="25" cy="25" r="8" fill="url(#blg2)" />
+                        <defs>
+                            <linearGradient id="blg1" x1="5" y1="5" x2="45" y2="45">
+                                <stop offset="0%" stop-color="#667eea" />
+                                <stop offset="100%" stop-color="#764ba2" />
+                            </linearGradient>
+                            <linearGradient id="blg2" x1="17" y1="17" x2="33" y2="33">
+                                <stop offset="0%" stop-color="#f093fb" />
+                                <stop offset="100%" stop-color="#f5576c" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span>StriveX</span>
+                </div>
+                <h2>Get started free</h2>
+                <p class="form-subtitle">Your intelligent schedule is 60 seconds away</p>
                 <form onsubmit="handleSignup(event)">
                     <div class="form-group">
                         <label for="signupEmail">Email</label>
                         <input type="email" id="signupEmail" required placeholder="you@example.com">
                     </div>
-
                     <div class="form-group">
                         <label for="signupPassword">Password</label>
                         <input type="password" id="signupPassword" required placeholder="••••••••" minlength="6">
                     </div>
-
-                    <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+                    <button type="submit" class="btn btn-primary btn-full">Create Account →</button>
                 </form>
-
-                <p class="form-switch">
-                    Already have an account?
-                    <a href="#" onclick="switchAuthMode('login')">Sign in</a>
-                </p>
+                <p class="form-switch">Already have an account? <a href="#" onclick="switchAuthMode('login')">Sign
+                        in</a></p>
             </div>
         </div>
     </div>

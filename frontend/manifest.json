@@ -1,0 +1,81 @@
+{
+    "id": "/",
+    "name": "StriveX — The Decision Engine",
+    "short_name": "StriveX",
+    "description": "StriveX eliminates decision fatigue. It breaks your goals into an intelligent daily schedule, adapts in real-time, and learns your productivity patterns.",
+    "start_url": "/index.html?source=pwa",
+    "display": "standalone",
+    "display_override": [
+        "window-controls-overlay",
+        "standalone",
+        "minimal-ui"
+    ],
+    "background_color": "#08090a",
+    "theme_color": "#5e6ad2",
+    "orientation": "portrait-primary",
+    "scope": "/",
+    "lang": "en-US",
+    "dir": "ltr",
+    "categories": [
+        "productivity",
+        "lifestyle",
+        "utilities"
+    ],
+    "icons": [
+        {
+            "src": "icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "icons/screenshot-mobile.png",
+            "sizes": "390x844",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "StriveX Dashboard — Your daily AI schedule"
+        },
+        {
+            "src": "icons/screenshot-desktop.png",
+            "sizes": "1280x800",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "StriveX — Full productivity dashboard"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Open Dashboard",
+            "short_name": "Today",
+            "url": "/dashboard.html",
+            "description": "Jump straight to today's AI-generated schedule",
+            "icons": [
+                {
+                    "src": "icons/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
+    ],
+    "prefer_related_applications": false
+}

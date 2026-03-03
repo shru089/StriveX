@@ -1,0 +1,79 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+*.spec
+
+# === Virtual Environments ===
+.venv/
+venv/
+env/
+ENV/
+
+# === Environment Secrets ===
+.env
+backend/.env
+.env.local
+.env.production
+.env.*.local
+*.env
+
+# === Database ===
+*.db
+*.sqlite
+*.sqlite3
+instance/
+backend/instance/
+
+# === Logs ===
+*.log
+logs/
+strivex.log
+backend_stderr.log
+backend_stdout.log
+frontend_stderr.log
+frontend_stdout.log
+frontend/frontend.log
+
+# === OS Files ===
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# === IDE Files ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === Node ===
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# === Test Artifacts ===
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+
+# === Deployment Artifacts ===
+*.zip
+*.tar.gz
+
+# === PWA / Play Store (user-generated, do not commit) ===
+frontend/.well-known/assetlinks.json
+frontend/icons/screenshot-mobile.png
+frontend/icons/screenshot-desktop.png
+
+# === Vercel / Netlify build outputs ===
+.vercel/
+.netlify/

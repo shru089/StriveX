@@ -1,123 +1,174 @@
-# StriveX - AI-Powered Adaptive Productivity System
+# StriveX — Adaptive AI Productivity Scheduler
 
-## 🎯 MVP Goal
-Prove one thing: **StriveX can intelligently plan a user's day and adapt when they procrastinate.**
+> Stop planning. Start achieving. StriveX turns your goals into an intelligent daily schedule that adapts in real-time and learns your behaviour.
 
-## 🚀 Core Features (MVP Only)
-
-### 1. Smart Onboarding (< 2 minutes)
-- Wake/sleep times
-- Fixed commitments
-- Primary goal + deadline
-- Energy type (morning/night/flexible)
-
-### 2. Intelligent Scheduling Engine ⭐ (THE HEART)
-- 7-day adaptive plan
-- Time-blocked daily schedule
-- Breaks goals into executable tasks
-- Respects sleep, commitments, focus windows
-- Auto-buffers & difficulty balancing
-
-### 3. Daily To-Do + Timeline View
-- Clear time blocks
-- One-tap actions: ✅ Done | ⏸ Skip | 🔄 Reschedule
-- No clutter
-
-### 4. Procrastination Detection (Light & Smart)
-- End-of-day check (3-5 questions)
-- Pattern detection (late sleep → missed morning)
-- Auto-adjusts tomorrow's plan
-
-### 5. Auto-Rescheduling Logic
-- Reshuffles on skip/low energy
-- Protects critical deadlines
-- No guilt, just adaptation
-
-### 6. Deadline Guardrail
-- Backward planning from deadline
-- ⚠️ Risk detection
-- Progress tracking
-
-### 7. Minimal Gamification
-- Daily streak counter
-- XP for task completion
-
-### 8. MVP Security
-- Email/phone auth
-- Encrypted storage
-- Privacy-first design
-
-## 🛠️ Tech Stack
-- **Frontend**: HTML + Vanilla CSS + JavaScript
-- **Backend**: Python Flask
-- **Database**: SQLite
-- **Scheduling**: Custom algorithm (rule-based + pattern learning)
-
-## 📊 Success Criteria
-✅ User uses it 5 days in a row  
-✅ Schedule actually adapts  
-✅ User says: *"This planned my day better than I would have"*
-
-## 🚫 NOT in MVP
-- Notion-style pages
-- Social features
-- AI chat assistant
-- Voice input
-- Deep analytics
-- Multi-device sync perfection
-
-## 🏃 Quick Start
-```bash
-# Backend
-cd backend
-pip install -r requirements.txt
-python app.py
-
-# Frontend
-cd frontend
-# Open index.html in browser (or use live server)
-```
-
-## 📁 Project Structure
-```
-StriveX/
-├── frontend/           # UI (HTML/CSS/JS)
-│   ├── index.html     # Landing/login
-│   ├── onboarding.html
-│   ├── dashboard.html # Main daily view
-│   ├── css/
-│   └── js/
-├── backend/           # Flask API
-│   ├── app.py        # Main server
-│   ├── scheduler.py  # Smart scheduling engine
-│   ├── detector.py   # Procrastination detection
-│   └── models.py     # Database models
-├── database/
-│   └── schema.sql
-└── docs/
-    └── algorithm.md  # Scheduling logic explained
-```
-
-## 🧠 Core Algorithm (Simplified)
-1. **Input**: Goals, deadlines, availability, energy type
-2. **Process**:
-   - Break goals into tasks (estimated duration)
-   - Distribute backward from deadline
-   - Fit into available time slots
-   - Balance difficulty (deep vs light work)
-   - Add buffer time (20% rule)
-3. **Adapt**:
-   - Track completion patterns
-   - Detect energy mismatches
-   - Reshuffle on procrastination signals
-   - Protect critical path to deadline
-
-## 🔐 Security Notes
-- Passwords hashed (bcrypt)
-- Session tokens (JWT)
-- HTTPS in production
-- No unnecessary data collection
+[![License: MIT](https://img.shields.io/badge/License-MIT-5e6ad2.svg)](LICENSE)
+[![Python 3.11](https://img.shields.io/badge/Python-3.11-blue.svg)](https://python.org)
+[![PWA Ready](https://img.shields.io/badge/PWA-Ready-5e6ad2.svg)](https://web.dev/progressive-web-apps/)
 
 ---
 
-**Built for hackathons, designed for real impact.**
+## Features
+
+- **Adaptive Daily Scheduling** — Goals broken into time-blocked tasks, auto-rescheduled around your commitments
+- **AI Behavioral Mentor** — Personalized nudges based on your productivity patterns
+- **Feasibility Engine** — Live % chance of hitting your deadline, with consequence messaging
+- **Ghost Mode** — Schedule protected time without distractions
+- **Voice-to-Goal** — Speak your goals, StriveX parses them
+- **PWA** — Install on Android/iOS as a home screen app
+- **Replan My Day** — One-click rescheduler for the rest of today
+
+---
+
+## Quick Start (Local)
+
+### Prerequisites
+- Python 3.11+
+- Node.js 18+ (for the frontend dev server)
+
+### 1. Clone & Setup Backend
+```bash
+git clone https://github.com/YOUR_USERNAME/StriveX.git
+cd StriveX
+
+# Create virtual environment
+python -m venv .venv
+.venv\Scripts\activate       # Windows
+# source .venv/bin/activate  # macOS/Linux
+
+# Install dependencies
+pip install -r backend/requirements.txt
+```
+
+### 2. Configure Environment
+```bash
+# Copy .env.example and fill in your values
+cp backend/.env.example backend/.env
+```
+
+**Required** — Generate a secure `SECRET_KEY`:
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+Paste the output into `backend/.env` as `SECRET_KEY=<your key>`.
+
+### 3. Start the App
+```bash
+# Windows — double-click or run:
+start_strivex.bat
+
+# Or manually:
+# Terminal 1 — Backend (port 5001)
+cd backend && python app.py
+
+# Terminal 2 — Frontend (port 3001)
+node serve_node.js
+```
+
+Open **http://localhost:3001**
+
+---
+
+## Deploy to Production
+
+### Backend → [Render](https://render.com) (Free tier)
+
+1. Push to GitHub
+2. New → **Web Service** → Connect your repo
+3. **Build Command:** `pip install -r backend/requirements.txt`
+4. **Start Command:** `cd backend && python -m waitress --port=$PORT app:app`
+5. **Environment Variables** (in Render dashboard):
+   - `SECRET_KEY` = your strong random key
+   - `CORS_ORIGIN` = `https://your-strivex.netlify.app`
+   - `DATABASE_URL` = (optional, defaults to SQLite)
+
+### Frontend → [Netlify](https://netlify.com) (Free tier)
+
+1. New site → Import from GitHub → select StriveX repo
+2. **Publish directory:** `frontend`
+3. **Redirects** — Create `frontend/_redirects`:
+   ```
+   /api/*  https://your-backend.onrender.com/api/:splat  200
+   /*      /index.html                                   200
+   ```
+4. After deploy, copy your Netlify URL and set it as `CORS_ORIGIN` in Render
+
+### Update API URL for production
+In `frontend/js/auth.js`, change:
+```js
+const API_URL = 'http://localhost:5001/api';  // dev
+// to:
+const API_URL = 'https://your-backend.onrender.com/api';  // prod
+```
+Or better — use an environment-aware config.
+
+---
+
+## Install as Mobile App (PWA)
+
+**Android (Chrome):**
+1. Open the site in Chrome
+2. Tap the 3-dot menu → "Add to Home screen"
+3. StriveX appears as a native-looking app
+
+**iOS (Safari):**
+1. Open the site in Safari
+2. Tap Share → "Add to Home Screen"
+3. StriveX appears with its icon on your home screen
+
+---
+
+## Security
+
+- **JWT Auth** — 7-day tokens signed with a strong secret key
+- **Rate Limiting** — 5 register/hr, 10 login/hr per IP (brute-force protection)
+- **CORS Locked** — Only your configured `CORS_ORIGIN` can call the API
+- **Security Headers** — `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`
+- **Input Validation** — Email format, password min-length enforced server-side
+- **XSS Protection** — All user data sanitized via `escapeHtml()` before DOM injection
+- **No Secrets in Git** — `.gitignore` excludes `.env`, `*.db`, logs, and virtualenv
+
+---
+
+## Project Structure
+
+```
+StriveX/
+├── backend/
+│   ├── app.py           # Flask API + security middleware
+│   ├── models.py        # SQLAlchemy database models
+│   ├── scheduler.py     # Adaptive scheduling engine
+│   ├── intelligence.py  # AI behavioral analysis
+│   ├── requirements.txt
+│   └── .env.example     # Environment variable template
+├── frontend/
+│   ├── index.html       # Login/Register page
+│   ├── onboarding.html  # User profile setup
+│   ├── dashboard.html   # Main app dashboard
+│   ├── manifest.json    # PWA manifest
+│   ├── sw.js            # Service Worker
+│   ├── css/
+│   └── js/
+├── .gitignore
+├── start_strivex.bat    # Windows one-click launcher
+└── serve_node.js        # Node.js frontend server
+```
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | HTML5, CSS3 (Glassmorphism), Vanilla JS |
+| Backend | Python 3.11, Flask 3.0 |
+| Database | SQLite (dev) / PostgreSQL (prod) |
+| Auth | JWT (PyJWT) + bcrypt |
+| PWA | Web App Manifest + Service Worker |
+| WSGI | Waitress (production) |
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE)

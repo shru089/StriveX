@@ -1,4 +1,77 @@
-const API_URL = 'http://localhost:5000/api';
+// ============= API URL CONFIGURATION =============
+// Priority: window.STRIVEX_API_URL (set in index.html for prod) > auto-detect
+const API_URL = (() => {
+    // 1. Explicit override (set in a <script> before auth.js in production HTML)
+    if (window.STRIVEX_API_URL) return window.STRIVEX_API_URL;
+    // 2. Auto-detect: on localhost, point to local backend
+    const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    if (isLocal) return 'http://localhost:5001/api';
+    // 3. Production: backend is a separate service — read from meta tag or use same-origin /api
+    const meta = document.querySelector('meta[name="api-url"]');
+    if (meta) return meta.content;
+    // 4. Fallback: same-origin /api (works if backend is proxied via Vercel rewrites)
+    return `${window.location.origin}/api`;
+})();
+
+
+// ============= TOKEN MANAGEMENT =============
+let _refreshTimer = null;
+
+function storeTokens(accessToken, refreshToken, user) {
+    localStorage.setItem('authToken', accessToken);
+    if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+    if (user) localStorage.setItem('user', JSON.stringify(user));
+    scheduleTokenRefresh(accessToken);
+}
+
+function scheduleTokenRefresh(accessToken) {
+    if (_refreshTimer) clearTimeout(_refreshTimer);
+    try {
+        const payload = JSON.parse(atob(accessToken.split('.')[1]));
+        const expiresIn = (payload.exp * 1000) - Date.now();
+        const refreshIn = expiresIn - (2 * 60 * 1000); // 2 min before expiry
+        if (refreshIn > 0) {
+            _refreshTimer = setTimeout(silentRefresh, refreshIn);
+        }
+    } catch (e) { /* token parse error — ignore */ }
+}
+
+async function silentRefresh() {
+    const rawRefresh = localStorage.getItem('refreshToken');
+    if (!rawRefresh) return;
+    try {
+        const res = await fetch(`${API_URL}/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: rawRefresh })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            storeTokens(data.access_token, data.refresh_token, data.user);
+        } else {
+            // Refresh failed — redirect to login
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    } catch (e) { /* network error — try again next cycle */ }
+}
+
+// Capture OAuth tokens from URL params (after Google callback redirect)
+(function captureOAuthTokens() {
+    const params = new URLSearchParams(window.location.search);
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    if (accessToken) {
+        storeTokens(accessToken, refreshToken, null);
+        // Clean URL
+        window.history.replaceState({}, '', window.location.pathname);
+        window.location.href = 'dashboard.html';
+    }
+    const error = params.get('error');
+    if (error) {
+        console.warn('OAuth error:', error);
+    }
+})();
 
 // Auth state management
 let currentUser = null;
@@ -6,16 +79,26 @@ let authToken = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    // Check if user is already logged in
     const token = localStorage.getItem('authToken');
     if (token) {
         authToken = token;
-        // Redirect to dashboard if on landing page
-        if (window.location.pathname.endsWith('index.html') || window.location.pathname === '/') {
-            window.location.href = 'onboarding.html';
+        scheduleTokenRefresh(token); // Resume refresh timer on page load
+        const isLanding = window.location.pathname.endsWith('index.html') || window.location.pathname === '/';
+        if (isLanding) {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.wake_time) {
+                window.location.href = 'dashboard.html';
+            } else {
+                window.location.href = 'onboarding.html';
+            }
         }
     }
 });
+
+// Google Sign-In
+function signInWithGoogle() {
+    window.location.href = `${API_URL}/auth/google`;
+}
 
 // Modal functions
 function showAuthModal(mode) {
@@ -98,7 +181,7 @@ async function handleLogin(event) {
         // Better error messages
         let errorMessage = 'Connection error. ';
         if (error.message.includes('Failed to fetch')) {
-            errorMessage += 'Please make sure the backend server is running on http://localhost:5000';
+            errorMessage += 'Please make sure the backend server is running on http://localhost:5001';
         } else {
             errorMessage += 'Please try again.';
         }
@@ -158,7 +241,7 @@ async function handleSignup(event) {
         // Better error messages
         let errorMessage = 'Connection error. ';
         if (error.message.includes('Failed to fetch')) {
-            errorMessage += 'Please make sure the backend server is running on http://localhost:5000';
+            errorMessage += 'Please make sure the backend server is running on http://localhost:5001';
         } else {
             errorMessage += 'Please try again.';
         }
