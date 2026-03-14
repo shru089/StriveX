@@ -42,6 +42,7 @@ class User(db.Model):
     daily_logs = db.relationship('DailyLog', backref='user', lazy=True, cascade='all, delete-orphan')
     behavior_events = db.relationship('BehaviorEvent', backref='user', lazy=True, cascade='all, delete-orphan')
     refresh_tokens = db.relationship('RefreshToken', backref='user', lazy=True, cascade='all, delete-orphan')
+    todo_items = db.relationship('TodoItem', backref='user', lazy=True, cascade='all, delete-orphan')
 
     def to_dict(self):
         return {
@@ -305,3 +306,37 @@ class Milestone(db.Model):
             'status': self.status,
             'completed_at': self.completed_at.isoformat() if self.completed_at else None,
         }
+
+
+class TodoItem(db.Model):
+    """Enhanced to-do item — created manually or by AI Work Coach."""
+    __tablename__ = 'todo_items'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    title = db.Column(db.String(300), nullable=False)
+    description = db.Column(db.Text)
+    priority = db.Column(db.Integer, default=2)       # 1=High, 2=Medium, 3=Low
+    category = db.Column(db.String(100), default='General')
+    completed = db.Column(db.Boolean, default=False)
+    due_date = db.Column(db.Date)
+    source = db.Column(db.String(20), default='manual')  # manual | ai
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'priority': self.priority,
+            'category': self.category,
+            'completed': self.completed,
+            'due_date': self.due_date.isoformat() if self.due_date else None,
+            'source': self.source,
+            'created_at': self.created_at.isoformat(),
+            'completed_at': self.completed_at.isoformat() if self.completed_at else None,
+        }
+

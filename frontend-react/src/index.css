@@ -1,0 +1,6 @@
+/* StriveX — delegates entirely to globals.css */
+/* Reset body flex centering that Vite injects by default */
+body {
+  display: block;
+  place-items: unset;
+}

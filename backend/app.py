@@ -79,6 +79,27 @@ CORS(app, origins=[ALLOWED_ORIGIN], supports_credentials=True,
 # ============= RATE LIMITING =============
 limiter = Limiter(get_remote_address, app=app, default_limits=[], storage_uri='memory://')
 
+# ============= AI RESPONSE CACHE (minimize Gemini API calls) =============
+# Simple in-memory cache: {cache_key: {'value': ..., 'expires': datetime}}
+_AI_CACHE: dict = {}
+
+def _cache_get(key: str):
+    """Return cached value if not expired, else None."""
+    entry = _AI_CACHE.get(key)
+    if entry and datetime.utcnow() < entry['expires']:
+        return entry['value']
+    if key in _AI_CACHE:
+        del _AI_CACHE[key]  # clean up expired
+    return None
+
+def _cache_set(key: str, value, ttl_seconds: int):
+    """Store value in cache with TTL."""
+    _AI_CACHE[key] = {'value': value, 'expires': datetime.utcnow() + timedelta(seconds=ttl_seconds)}
+    # Keep cache size bounded (max 1000 entries)
+    if len(_AI_CACHE) > 1000:
+        oldest_key = next(iter(_AI_CACHE))
+        del _AI_CACHE[oldest_key]
+
 # ============= UPGRADE 5: Google OAuth =============
 oauth_client = OAuth(app)
 google = oauth_client.register(
@@ -455,6 +476,21 @@ def ai_daily_brief(current_user):
       200:
         description: Personalized briefing text and nudge
     """
+    brief_cache_key = f'daily_brief_{current_user.id}'
+    nudge_cache_key = f'nudge_{current_user.id}'
+
+    cached_brief = _cache_get(brief_cache_key)
+    cached_nudge = _cache_get(nudge_cache_key)
+
+    if cached_brief and cached_nudge:
+        logger.info(f"[AI CACHE HIT] daily_brief for user {current_user.id}")
+        return jsonify({
+            'brief': cached_brief,
+            'nudge': cached_nudge,
+            'ai_powered': gemini.model is not None,
+            'cached': True
+        }), 200
+
     today_tasks = Task.query.filter_by(user_id=current_user.id, scheduled_date=datetime.utcnow().date()).all()
     active_goals = Goal.query.filter_by(user_id=current_user.id, status='active').all()
     hour = datetime.utcnow().hour
@@ -476,10 +512,16 @@ def ai_daily_brief(current_user):
         'hour': hour,
     })
 
+    # Cache: brief for 8 hours, nudge for 1 hour
+    _cache_set(brief_cache_key, brief, ttl_seconds=8 * 3600)
+    _cache_set(nudge_cache_key, nudge, ttl_seconds=3600)
+    logger.info(f"[AI CACHE SET] daily_brief for user {current_user.id}")
+
     return jsonify({
         'brief': brief,
         'nudge': nudge,
-        'ai_powered': gemini.model is not None
+        'ai_powered': gemini.model is not None,
+        'cached': False
     }), 200
 
 
@@ -1570,11 +1612,156 @@ def get_behavioral_analysis(current_user):
     return jsonify(analysis), 200
 
 
-# ============= HEALTH CHECK =============
+# ============= TODO LIST ROUTES (health check already defined above) =============
 
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    return jsonify({'status': 'healthy', 'message': 'StriveX API is running', 'version': '3.0'}), 200
+
+
+# ============= TODO LIST ROUTES =============
+
+@app.route('/api/todos', methods=['GET'])
+@token_required
+def get_todos(current_user):
+    """List all to-do items for the current user."""
+    from models import TodoItem
+    todos = TodoItem.query.filter_by(user_id=current_user.id).order_by(
+        TodoItem.completed.asc(), TodoItem.priority.asc(), TodoItem.created_at.desc()
+    ).all()
+    return jsonify([t.to_dict() for t in todos]), 200
+
+
+@app.route('/api/todos', methods=['POST'])
+@token_required
+def create_todo(current_user):
+    """Create a new to-do item."""
+    from models import TodoItem
+    data = request.json or {}
+    title = sanitize_str(data.get('title', ''), max_len=300)
+    if not title:
+        return jsonify({'error': 'title is required'}), 400
+
+    due_date = None
+    if data.get('due_date'):
+        try:
+            due_date = datetime.fromisoformat(data['due_date']).date()
+        except Exception:
+            pass
+
+    todo = TodoItem(
+        user_id=current_user.id,
+        title=title,
+        description=sanitize_str(data.get('description', ''), max_len=1000),
+        priority=max(1, min(3, int(data.get('priority', 2)))),
+        category=sanitize_str(data.get('category', 'General'), max_len=100),
+        due_date=due_date,
+        source=data.get('source', 'manual')
+    )
+    db.session.add(todo)
+    db.session.commit()
+    return jsonify(todo.to_dict()), 201
+
+
+@app.route('/api/todos/<int:todo_id>', methods=['PATCH'])
+@token_required
+def update_todo(current_user, todo_id):
+    """Toggle completed or update fields of a to-do item."""
+    from models import TodoItem
+    todo = TodoItem.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if not todo:
+        return jsonify({'error': 'Todo not found'}), 404
+
+    data = request.json or {}
+    if 'completed' in data:
+        todo.completed = bool(data['completed'])
+        todo.completed_at = datetime.utcnow() if todo.completed else None
+    if 'title' in data:
+        todo.title = sanitize_str(data['title'], max_len=300)
+    if 'priority' in data:
+        todo.priority = max(1, min(3, int(data['priority'])))
+    if 'category' in data:
+        todo.category = sanitize_str(data['category'], max_len=100)
+    if 'due_date' in data:
+        try:
+            todo.due_date = datetime.fromisoformat(data['due_date']).date() if data['due_date'] else None
+        except Exception:
+            pass
+
+    db.session.commit()
+    return jsonify(todo.to_dict()), 200
+
+
+@app.route('/api/todos/<int:todo_id>', methods=['DELETE'])
+@token_required
+def delete_todo(current_user, todo_id):
+    """Delete a to-do item."""
+    from models import TodoItem
+    todo = TodoItem.query.filter_by(id=todo_id, user_id=current_user.id).first()
+    if not todo:
+        return jsonify({'error': 'Todo not found'}), 404
+    db.session.delete(todo)
+    db.session.commit()
+    return jsonify({'message': 'Deleted'}), 200
+
+
+@app.route('/api/todos/bulk', methods=['POST'])
+@token_required
+def bulk_create_todos(current_user):
+    """Bulk-create multiple to-do items (e.g., from AI Work Coach)."""
+    from models import TodoItem
+    data = request.json or {}
+    tasks = data.get('tasks', [])
+    if not tasks:
+        return jsonify({'error': 'tasks array is required'}), 400
+
+    created = []
+    for t in tasks:
+        title = sanitize_str(t.get('title', ''), max_len=300)
+        if not title:
+            continue
+        due_date = None
+        if t.get('due_date'):
+            try:
+                due_date = datetime.fromisoformat(t['due_date']).date()
+            except Exception:
+                pass
+        todo = TodoItem(
+            user_id=current_user.id,
+            title=title,
+            description=sanitize_str(t.get('description', ''), max_len=1000),
+            priority=max(1, min(3, int(t.get('priority', 2)))),
+            category=sanitize_str(t.get('category', 'AI Task'), max_len=100),
+            due_date=due_date,
+            source=t.get('source', 'ai')
+        )
+        db.session.add(todo)
+        created.append(todo)
+
+    db.session.commit()
+    logger.info(f"Bulk created {len(created)} todos for user {current_user.id}")
+    return jsonify({'created': len(created), 'todos': [t.to_dict() for t in created]}), 201
+
+
+# ============= AI WORK COACH ROUTE =============
+
+
+@app.route('/api/work-coach', methods=['POST'])
+@token_required
+def work_coach(current_user):
+    """
+    AI Work Coach — parse user's work context into actionable tasks.
+    Body: { role, current_work, blockers }
+    Returns: { guidance, tasks, ai_powered }
+    """
+    data = request.json or {}
+    role = sanitize_str(data.get('role', 'Professional'), max_len=100)
+    current_work = sanitize_str(data.get('current_work', ''), max_len=500)
+    blockers = sanitize_str(data.get('blockers', ''), max_len=500)
+
+    if not current_work:
+        return jsonify({'error': 'current_work is required'}), 400
+
+    result = gemini.parse_work_context_to_tasks(role, current_work, blockers)
+    logger.info(f"Work coach called for user {current_user.id}: role='{role}'")
+    return jsonify(result), 200
 
 
 if __name__ == '__main__':

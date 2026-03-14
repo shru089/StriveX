@@ -127,6 +127,54 @@ Be concise, specific, and motivating. NO emojis. Return ONLY the briefing text."
                 pass
         return f"You have {user_data.get('tasks_today', 0)} tasks scheduled today. Stay consistent and keep your streak alive."
 
+    def parse_work_context_to_tasks(self, role: str, current_work: str, blockers: str) -> dict:
+        """
+        AI Work Coach: parse a user's work situation into actionable to-do tasks.
+        Returns a dict with steps (guidance) and tasks (structured to-do items).
+        """
+        if self.model:
+            try:
+                prompt = f"""You are an expert productivity coach. A user described their work situation below.
+Generate a JSON response with two keys:
+1. "guidance": A short (3-5 sentence) personalized coaching message with specific steps they should take.
+2. "tasks": A JSON array of 3-7 actionable to-do items. Each item must have:
+   - "title": Short action (max 80 chars)
+   - "description": One sentence detail
+   - "priority": 1 (High), 2 (Medium), or 3 (Low)
+   - "category": One of Work, Learning, Planning, Review, Health, Admin
+
+User's Role: {role}
+What they're working on: {current_work}
+Current blockers: {blockers}
+
+Return ONLY valid JSON, no markdown fences."""
+                response = self.model.generate_content(prompt)
+                text = response.text.strip()
+                text = re.sub(r'```(?:json)?', '', text).strip().rstrip('`')
+                result = json.loads(text)
+                return {
+                    'guidance': result.get('guidance', ''),
+                    'tasks': result.get('tasks', []),
+                    'ai_powered': True
+                }
+            except Exception as e:
+                pass
+
+        # Fallback: rule-based
+        tasks = []
+        if current_work:
+            tasks.append({'title': f'Work on: {current_work[:70]}', 'description': 'Continue progress on this task.', 'priority': 1, 'category': 'Work'})
+        if blockers:
+            tasks.append({'title': f'Address blocker: {blockers[:70]}', 'description': 'Find a solution or workaround.', 'priority': 1, 'category': 'Planning'})
+        tasks.append({'title': 'Review today\'s priorities', 'description': 'Spend 10 minutes reviewing what needs to be done.', 'priority': 2, 'category': 'Planning'})
+        return {
+            'guidance': f'As a {role}, focus on breaking your work into small, time-boxed tasks. Start with your highest priority item and eliminate blockers first.',
+            'tasks': tasks,
+            'ai_powered': False
+        }
+
+
+
 
 # Singleton instance (shared across requests)
 gemini = GeminiAdvisor()

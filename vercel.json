@@ -2,14 +2,17 @@
     "version": 2,
     "builds": [
         {
-            "src": "frontend/**",
-            "use": "@vercel/static"
+            "src": "frontend-react/package.json",
+            "use": "@vercel/static-build",
+            "config": {
+                "distDir": "dist"
+            }
         }
     ],
     "routes": [
         {
             "src": "/sw.js",
-            "dest": "/frontend/sw.js",
+            "dest": "/frontend-react/public/sw.js",
             "headers": {
                 "Cache-Control": "no-cache, no-store, must-revalidate",
                 "Service-Worker-Allowed": "/"
@@ -17,69 +20,28 @@
         },
         {
             "src": "/manifest.json",
-            "dest": "/frontend/manifest.json",
-            "headers": {
-                "Cache-Control": "public, max-age=86400"
-            }
+            "dest": "/frontend-react/public/manifest.json"
         },
         {
             "src": "/icons/(.*)",
-            "dest": "/frontend/icons/$1",
-            "headers": {
-                "Cache-Control": "public, max-age=2592000, immutable"
-            }
+            "dest": "/frontend-react/public/icons/$1"
         },
         {
-            "src": "/css/(.*)",
-            "dest": "/frontend/css/$1",
-            "headers": {
-                "Cache-Control": "public, max-age=2592000, immutable"
-            }
-        },
-        {
-            "src": "/js/(.*)",
-            "dest": "/frontend/js/$1",
-            "headers": {
-                "Cache-Control": "public, max-age=2592000, immutable"
-            }
-        },
-        {
-            "src": "/dashboard.html",
-            "dest": "/frontend/dashboard.html"
-        },
-        {
-            "src": "/onboarding.html",
-            "dest": "/frontend/onboarding.html"
-        },
-        {
-            "src": "/offline.html",
-            "dest": "/frontend/offline.html"
+            "src": "/api/(.*)",
+            "dest": "https://your-backend.railway.app/api/$1"
         },
         {
             "src": "/(.*)",
-            "dest": "/frontend/index.html"
+            "dest": "/frontend-react/dist/index.html"
         }
     ],
     "headers": [
         {
             "source": "/(.*)",
             "headers": [
-                {
-                    "key": "X-Content-Type-Options",
-                    "value": "nosniff"
-                },
-                {
-                    "key": "X-Frame-Options",
-                    "value": "DENY"
-                },
-                {
-                    "key": "Referrer-Policy",
-                    "value": "strict-origin-when-cross-origin"
-                },
-                {
-                    "key": "Permissions-Policy",
-                    "value": "geolocation=(), microphone=(self)"
-                }
+                { "key": "X-Content-Type-Options", "value": "nosniff" },
+                { "key": "X-Frame-Options", "value": "DENY" },
+                { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
             ]
         }
     ]

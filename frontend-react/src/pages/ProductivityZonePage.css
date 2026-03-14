@@ -1,0 +1,114 @@
+/* ─── Focus Zone Page ───────────────────────────────────────────────────────── */
+.pz-page { position: fixed; inset: 0; overflow: hidden; transition: background 0.8s ease; }
+.pz-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+
+/* Ambient glow orbs */
+.pz-orb { position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none; animation: orbDrift 12s ease-in-out infinite; }
+.pz-orb-1 { width: 400px; height: 400px; background: rgba(94,106,210,0.12); top: -100px; left: -100px; animation-delay: 0s; }
+.pz-orb-2 { width: 300px; height: 300px; background: rgba(240,147,251,0.08); bottom: 100px; right: -50px; animation-delay: -4s; }
+.pz-orb-3 { width: 250px; height: 250px; background: rgba(16,185,129,0.07); top: 50%; left: 50%; transform: translate(-50%,-50%); animation-delay: -8s; }
+@keyframes orbDrift { 0%,100%{transform:translate(0,0)} 33%{transform:translate(30px,-20px)} 66%{transform:translate(-20px,30px)} }
+
+/* ─── Liquid Glass Widget ───────────────────────────────────────────────────── */
+.liquid-widget {
+  background: rgba(6, 7, 10, 0.72) !important;
+  backdrop-filter: blur(28px) saturate(1.5) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(1.5) !important;
+  border: 1px solid rgba(255,255,255,0.09) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.07) inset !important;
+  position: relative;
+  overflow: hidden;
+}
+.liquid-widget::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+}
+
+/* ─── Widget base ───────────────────────────────────────────────────────────── */
+.pz-widget { padding: 16px; min-width: 220px; user-select: none; z-index: 10; }
+.pz-handle { font-size: 11px; color: rgba(255,255,255,0.25); margin-bottom: 12px; cursor: grab; letter-spacing: 0.05em; }
+.pz-handle:active { cursor: grabbing; }
+
+/* ─── Pomodoro ──────────────────────────────────────────────────────────────── */
+.pz-mode-tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+.pz-tab { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; color: rgba(255,255,255,0.45); font-size: 11px; cursor: pointer; padding: 5px; transition: all 0.2s; font-family: inherit; }
+.pz-tab.active { background: rgba(94,106,210,0.2); border-color: rgba(94,106,210,0.4); color: #fff; }
+.pz-ring { position: relative; width: 130px; height: 130px; margin: 0 auto 12px; }
+.pz-ring svg { display: block; }
+.pz-timer { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.pz-sessions { display: flex; gap: 6px; justify-content: center; margin-bottom: 12px; }
+.pz-pip { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.12); transition: all 0.3s; }
+.pz-pip.lit { background: #667eea; box-shadow: 0 0 8px rgba(102,126,234,0.7); }
+.pz-controls { display: flex; gap: 8px; justify-content: center; align-items: center; }
+.pz-btn-sm { width: 32px; height: 32px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.08); border-radius: 50%; color: #fff; cursor: pointer; font-size: 13px; transition: background 0.2s; }
+.pz-btn-sm:hover { background: rgba(255,255,255,0.12); }
+.pz-btn-play { width: 44px; height: 44px; background: linear-gradient(135deg,#667eea,#764ba2); border: none; border-radius: 50%; color: #fff; font-size: 18px; cursor: pointer; box-shadow: 0 4px 16px rgba(102,126,234,0.4); transition: all 0.2s; }
+.pz-btn-play:hover { transform: scale(1.08); }
+
+/* ─── Clock ─────────────────────────────────────────────────────────────────── */
+.pz-clock { min-width: 230px; }
+.clock-svg { display: block; width: 110px; height: 110px; margin: 0 auto 8px; }
+.pz-digital { text-align: center; font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-bottom: 2px; }
+.pz-date { text-align: center; font-size: 11px; color: rgba(255,255,255,0.35); margin-bottom: 10px; }
+.pz-alarm-add { display: flex; gap: 5px; align-items: center; margin-bottom: 8px; }
+.pz-alarm-input { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; padding: 5px 7px; color: #fff; font-size: 11px; font-family: inherit; min-width: 0; }
+.pz-alarm-set { background: rgba(94,106,210,0.3); border: 1px solid rgba(94,106,210,0.4); border-radius: 7px; color: #fff; padding: 5px 10px; font-size: 11px; cursor: pointer; }
+.pz-alarm-item { font-size: 11px; color: rgba(255,255,255,0.4); padding: 3px 0; }
+
+/* Alarm ringing modal */
+.alarm-ring-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.alarm-ring-inner { text-align: center; animation: alarmPulse 0.6s ease-in-out infinite; }
+@keyframes alarmPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+.alarm-ring-icon { font-size: 64px; }
+.alarm-ring-label { font-size: 1.5rem; font-weight: 700; margin: 12px 0; }
+.alarm-ring-inner button { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: #fff; padding: 10px 28px; cursor: pointer; font-size: 1rem; }
+
+/* ─── Sound Mixer ───────────────────────────────────────────────────────────── */
+.pz-sound { min-width: 260px; }
+.pz-sound-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.pz-sound-ch { display: flex; flex-direction: column; gap: 5px; }
+.pz-sound-btn { padding: 7px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 9px; color: rgba(255,255,255,0.6); font-size: 12px; cursor: pointer; transition: all 0.2s; position: relative; font-family: inherit; text-align: center; }
+.pz-sound-btn.active { color: #fff; background: rgba(255,255,255,0.1); }
+.pz-sound-dot { position: absolute; top: 4px; right: 4px; width: 5px; height: 5px; border-radius: 50%; animation: soundPulse 1.5s ease-in-out infinite; }
+@keyframes soundPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.pz-slider { width: 100%; height: 3px; accent-color: #667eea; cursor: pointer; }
+.pz-master { display: flex; align-items: center; gap: 8px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px; }
+.pz-master span { font-size: 14px; }
+
+/* ─── Quick Todo ────────────────────────────────────────────────────────────── */
+.pz-todo { min-width: 220px; max-width: 260px; }
+.pz-todo-add { display: flex; gap: 6px; margin-bottom: 10px; }
+.pz-todo-input { flex: 1; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 6px 10px; color: #fff; font-size: 12px; font-family: inherit; }
+.pz-todo-input:focus { outline: none; border-color: rgba(94,106,210,0.5); }
+.pz-todo-btn { width: 28px; height: 28px; background: rgba(94,106,210,0.3); border: none; border-radius: 8px; color: #fff; font-size: 18px; cursor: pointer; }
+.pz-todo-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px; color: rgba(255,255,255,0.65); cursor: pointer; transition: color 0.2s; }
+.pz-todo-item:hover { color: #fff; }
+.pz-todo-item.done span { text-decoration: line-through; opacity: 0.45; }
+.pz-todo-cb { width: 15px; height: 15px; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+.pz-todo-item.done .pz-todo-cb { background: #10b981; border-color: #10b981; color: #fff; }
+
+/* ─── Dock ──────────────────────────────────────────────────────────────────── */
+.liquid-dock {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center;
+  background: rgba(4, 5, 8, 0.88);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px; padding: 10px 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.07) inset;
+  z-index: 100;
+}
+.pz-back { background: none; border: none; color: rgba(255,255,255,0.5); font-size: 12px; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: color 0.2s; }
+.pz-back:hover { color: #fff; }
+.pz-scenes { display: flex; gap: 5px; flex-wrap: wrap; }
+.pz-scene { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; color: rgba(255,255,255,0.6); font-size: 11px; padding: 5px 9px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.pz-scene:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.pz-scene.active { background: rgba(94,106,210,0.25); border-color: rgba(94,106,210,0.4); color: #fff; }
+.pz-widget-toggles { display: flex; gap: 6px; border-left: 1px solid rgba(255,255,255,0.08); padding-left: 12px; }
+.pz-toggle { width: 34px; height: 34px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; color: rgba(255,255,255,0.5); font-size: 15px; cursor: pointer; transition: all 0.2s; }
+.pz-toggle:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.pz-toggle.active { background: rgba(94,106,210,0.2); border-color: rgba(94,106,210,0.35); color: #fff; }

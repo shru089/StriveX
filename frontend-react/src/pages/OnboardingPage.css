@@ -1,0 +1,70 @@
+/* OnboardingPage CSS */
+.ob-page { min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px 80px; position: relative; }
+.ob-container { width: 100%; max-width: 620px; position: relative; z-index: 1; }
+.ob-logo { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; font-weight: 800; margin-bottom: 32px; }
+.ob-progress { margin-bottom: 32px; }
+.ob-progress-bar { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; margin-bottom: 8px; }
+.ob-progress-fill { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 2px; transition: width 0.5s ease; }
+.ob-progress-label { font-size: 12px; color: var(--text-tertiary); font-weight: 600; }
+.ob-step { background: rgba(20,21,23,0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 40px; backdrop-filter: blur(20px); box-shadow: 0 24px 64px rgba(0,0,0,0.4); animation: stepIn 0.3s ease; }
+@keyframes stepIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+.ob-step-header { margin-bottom: 32px; }
+.step-chip { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #a5b4fc; background: rgba(94,106,210,0.12); border: 1px solid rgba(94,106,210,0.2); border-radius: 100px; padding: 4px 12px; margin-bottom: 12px; }
+.ob-step-header h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
+.ob-step-header p { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; }
+.ob-form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+.ob-form-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); }
+.ob-form-group input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 14px; color: var(--text-primary); font-size: 0.9rem; }
+.ob-form-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(94,106,210,0.15); }
+.time-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 4px; }
+
+/* Energy cards */
+.energy-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 8px; }
+.energy-card-label { display: flex; flex-direction: column; align-items: center; gap: 6px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px 12px; cursor: pointer; transition: var(--transition); text-align: center; }
+.energy-card-label:hover { border-color: rgba(94,106,210,0.3); background: rgba(94,106,210,0.06); }
+.energy-card-label.selected { background: rgba(94,106,210,0.15); border-color: rgba(94,106,210,0.4); box-shadow: 0 0 12px rgba(94,106,210,0.1); }
+.energy-card-emoji { font-size: 1.8rem; }
+.energy-card-title { font-size: 0.875rem; font-weight: 700; }
+.energy-card-desc { font-size: 0.75rem; color: var(--text-secondary); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+/* Peak hours */
+.peak-hours-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
+.peak-hint { font-size: 12px; color: var(--text-tertiary); margin-top: 6px; }
+
+/* Priority cards */
+.priority-cards { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.priority-card-label { display: flex; align-items: center; gap: 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 16px; cursor: pointer; transition: var(--transition); }
+.priority-card-label:hover { border-color: rgba(94,106,210,0.3); }
+.priority-card-label.selected { background: rgba(94,106,210,0.12); border-color: rgba(94,106,210,0.4); }
+.priority-card-emoji { font-size: 1.4rem; width: 32px; text-align: center; flex-shrink: 0; }
+.priority-card-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 2px; }
+.priority-card-desc { font-size: 0.8rem; color: var(--text-secondary); }
+
+/* Commitments */
+.commitment-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.commitment-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 10px 14px; font-size: 0.875rem; }
+.commit-time { color: var(--text-secondary); font-size: 0.8rem; }
+.commitment-item button { background: none; border: none; color: var(--text-tertiary); cursor: pointer; font-size: 14px; padding: 2px 6px; }
+.commitment-item button:hover { color: #ef4444; }
+.commitment-inline { display: grid; grid-template-columns: 1fr auto auto auto; gap: 10px; align-items: end; margin-bottom: 20px; }
+.btn-add-commit { height: 40px; width: 40px; background: var(--gradient-primary); border: none; border-radius: 10px; color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+
+/* Feasibility preview */
+.feasibility-preview { border-radius: 12px; padding: 20px; text-align: center; margin-top: 16px; margin-bottom: 8px; }
+.feasibility-preview.risk-low { background: rgba(0,212,138,0.08); border: 1px solid rgba(0,212,138,0.2); }
+.feasibility-preview.risk-medium { background: rgba(255,184,0,0.08); border: 1px solid rgba(255,184,0,0.2); }
+.feasibility-preview.risk-high { background: rgba(255,77,77,0.08); border: 1px solid rgba(255,77,77,0.2); }
+.feas-score { font-size: 2rem; font-weight: 800; }
+.feas-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; margin-top: 4px; }
+.feas-msg { font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px; }
+
+/* Nav */
+.ob-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.06); }
+.btn-ob-next { display: flex; align-items: center; gap: 8px; padding: 12px 24px; background: var(--gradient-primary); color: #fff; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: inherit; }
+.btn-ob-next:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+.btn-ob-next:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-ob-back { padding: 12px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; color: var(--text-secondary); font-size: 0.875rem; cursor: pointer; font-family: inherit; transition: var(--transition); }
+.btn-ob-back:hover { background: rgba(255,255,255,0.09); color: var(--text-primary); }
+.btn-ob-skip { padding: 12px 16px; background: transparent; border: none; color: var(--text-tertiary); font-size: 0.85rem; cursor: pointer; font-family: inherit; transition: var(--transition); }
+.btn-ob-skip:hover { color: var(--text-secondary); }

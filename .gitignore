@@ -39,7 +39,7 @@ backend_stderr.log
 backend_stdout.log
 frontend_stderr.log
 frontend_stdout.log
-frontend/frontend.log
+frontend-react/frontend.log
 
 # === OS Files ===
 .DS_Store
@@ -70,9 +70,12 @@ htmlcov/
 *.tar.gz
 
 # === PWA / Play Store (user-generated, do not commit) ===
-frontend/.well-known/assetlinks.json
-frontend/icons/screenshot-mobile.png
-frontend/icons/screenshot-desktop.png
+frontend-react/public/.well-known/assetlinks.json
+frontend-react/public/icons/screenshot-mobile.png
+frontend-react/public/icons/screenshot-desktop.png
+
+# === React build output ===
+frontend-react/dist/
 
 # === Vercel / Netlify build outputs ===
 .vercel/
