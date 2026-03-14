@@ -1290,9 +1290,13 @@ def _log_behavior_event(user_id, task_id, event_type, metadata=None):
 @app.route('/api/analytics/patterns', methods=['GET'])
 @token_required
 def get_patterns(current_user):
-    detector = ProcrastinationDetector(current_user)
-    patterns = detector.analyze_patterns(days=7)
-    return jsonify(patterns), 200
+    try:
+        engine = BehavioralIntelligenceEngine(current_user)
+        patterns = engine.full_analysis()
+        return jsonify(patterns), 200
+    except Exception as e:
+        logger.error(f'Pattern analysis error: {e}')
+        return jsonify({'patterns': [], 'recommendations': [], 'burnout_risk': False}), 200
 
 
 @app.route('/api/analytics/deadline-risk/<int:goal_id>', methods=['GET'])
@@ -1301,9 +1305,23 @@ def get_deadline_risk(current_user, goal_id):
     goal = Goal.query.filter_by(id=goal_id, user_id=current_user.id).first()
     if not goal:
         return jsonify({'error': 'Goal not found'}), 404
-    
-    detector = ProcrastinationDetector(current_user)
-    risk_level, message = detector.check_deadline_risk(goal)
+
+    try:
+        # Derive risk from deadline and progress
+        deadline = goal.deadline or goal.end_date
+        progress = goal.progress or 0
+        days_left = (deadline - datetime.utcnow().date()).days if deadline else 999
+        if days_left < 3 and progress < 80:
+            risk_level, message = 'high', f'Only {days_left}d left with {progress}% done — push hard!'
+        elif days_left < 7 and progress < 50:
+            risk_level, message = 'high', f'Less than a week and only {progress}% complete.'
+        elif days_left < 14 and progress < 30:
+            risk_level, message = 'medium', 'Falling behind — consider re-prioritising.'
+        else:
+            risk_level, message = 'low', 'On track — keep the momentum!'
+    except Exception:
+        risk_level, message = 'low', 'Keep going!'
+
     return jsonify({'risk_level': risk_level, 'message': message}), 200
 
 
