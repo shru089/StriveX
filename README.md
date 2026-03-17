@@ -61,8 +61,10 @@ start_strivex.bat
 # Terminal 1 — Backend (port 5001)
 cd backend && python app.py
 
-# Terminal 2 — Frontend (port 3001)
-node serve_node.js
+# Terminal 2 — Frontend (Vite App)
+cd frontend-react
+npm install
+npm run dev
 ```
 
 Open **http://localhost:3001**
@@ -71,36 +73,24 @@ Open **http://localhost:3001**
 
 ## Deploy to Production
 
-### Backend → [Render](https://render.com) (Free tier)
+### Backend → [Railway](https://railway.app) (Recommended)
 
-1. Push to GitHub
-2. New → **Web Service** → Connect your repo
-3. **Build Command:** `pip install -r backend/requirements.txt`
-4. **Start Command:** `cd backend && python -m waitress --port=$PORT app:app`
-5. **Environment Variables** (in Render dashboard):
+1. Push your repository to GitHub.
+2. Go to Railway -> **New Project** -> **Deploy from GitHub repo** -> Select `StriveX`.
+3. Railway will auto-detect the `railway.toml` and build the Python API.
+4. **Environment Variables** (in Railway variables settings):
    - `SECRET_KEY` = your strong random key
-   - `CORS_ORIGIN` = `https://your-strivex.netlify.app`
-   - `DATABASE_URL` = (optional, defaults to SQLite)
+   - `CORS_ORIGIN` = `https://your-strivex.vercel.app` (Your frontend URL)
+   - `DATABASE_URL` = (optional, defaults to SQLite, or add Railway Postgres service)
+5. Generate a public domain in Railway Networking settings to get your API URL.
 
-### Frontend → [Netlify](https://netlify.com) (Free tier)
+### Frontend → [Vercel](https://vercel.com) (Free tier)
 
-1. New site → Import from GitHub → select StriveX repo
-2. **Publish directory:** `frontend`
-3. **Redirects** — Create `frontend/_redirects`:
-   ```
-   /api/*  https://your-backend.onrender.com/api/:splat  200
-   /*      /index.html                                   200
-   ```
-4. After deploy, copy your Netlify URL and set it as `CORS_ORIGIN` in Render
-
-### Update API URL for production
-In `frontend/js/auth.js`, change:
-```js
-const API_URL = 'http://localhost:5001/api';  // dev
-// to:
-const API_URL = 'https://your-backend.onrender.com/api';  // prod
-```
-Or better — use an environment-aware config.
+1. Import your GitHub repository to Vercel.
+2. Vercel will automatically detect the **Vite** framework from `frontend-react`.
+3. **Environment Variables** (in Vercel):
+   - `VITE_API_URL` = `https://your-backend.up.railway.app/api` (Your Railway backend URL)
+4. Deploy! Copy the final Vercel URL and set it as `CORS_ORIGIN` in your Railway backend.
 
 ---
 
@@ -141,17 +131,15 @@ StriveX/
 │   ├── intelligence.py  # AI behavioral analysis
 │   ├── requirements.txt
 │   └── .env.example     # Environment variable template
-├── frontend/
-│   ├── index.html       # Login/Register page
-│   ├── onboarding.html  # User profile setup
-│   ├── dashboard.html   # Main app dashboard
-│   ├── manifest.json    # PWA manifest
-│   ├── sw.js            # Service Worker
-│   ├── css/
-│   └── js/
+├── frontend-react/
+│   ├── src/             # React application source code
+│   ├── public/          # Static assets including manifest.json for PWA
+│   ├── index.html       # Vite HTML entry point
+│   ├── package.json     # Dependencies & scripts
+│   └── .env.example     # Environment variable template
 ├── .gitignore
-├── start_strivex.bat    # Windows one-click launcher
-└── serve_node.js        # Node.js frontend server
+├── docker-compose.yml   # Docker setup
+└── vercel.json          # Deployment config
 ```
 
 ---

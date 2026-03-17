@@ -34,11 +34,10 @@ Vercel will host your website/PWA.
 1.  **Sign up** at [Vercel.com](https://vercel.com/) with GitHub.
 2.  **Add New Project**: Select `StriveX`.
 3.  **Configure**:
-    - **Framework Preset**: Other (it's static HTML).
-    - **Build Command**: (Leave empty).
-    - **Output Directory**: `frontend`.
+    - **Framework Preset**: Vercel should automatically detect **Vite** (since the React app uses Vite).
+    - **Root Directory**: `frontend-react` (important!)
     - **Environment Variables**:
-        - `STRIVEX_API_URL`: Set this to your Railway URL + `/api` (e.g., `https://strivex-production.up.railway.app/api`).
+        - `VITE_API_URL`: Set this to your Railway URL + `/api` (e.g., `https://strivex-production.up.railway.app/api`).
 4.  **Deploy**: Vercel will give you a live URL.
     - Example: `https://strivex.vercel.app`
 5.  **Go back to Railway**: Update the `CORS_ORIGIN` variable in Railway to match this new Vercel URL.
@@ -53,8 +52,8 @@ Now that your app is live on Vercel, you can turn it into an Android app.
     - Open your Vercel URL in Chrome.
     - Press `F12` -> Toggle Device Toolbar (mobile icon).
     - Take two screenshots and save them as:
-        - `frontend/icons/screenshot-mobile.png` (390×844)
-        - `frontend/icons/screenshot-desktop.png` (1280×800)
+        - `frontend-react/public/icons/screenshot-mobile.png` (390×844)
+        - `frontend-react/public/icons/screenshot-desktop.png` (1280×800)
     - *Tip: You can just use any image editor to resize screenshots to these exact dimensions.*
 2.  **PWABuilder**: 
     - Visit [pwabuilder.com](https://www.pwabuilder.com/).
@@ -66,8 +65,8 @@ Now that your app is live on Vercel, you can turn it into an Android app.
     - **App Name**: StriveX.
     - Download the **Digital Asset Links** (`assetlinks.json`).
 4.  **Final Code Step**:
-    - Place the `assetlinks.json` inside a folder named `.well-known` inside `frontend/`.
-    - `frontend/.well-known/assetlinks.json`
+    - Place the `assetlinks.json` inside `.well-known` folder in your React public folder.
+    - Path should be: `frontend-react/public/.well-known/assetlinks.json`
     - Commit and push to GitHub. This proves to Google that you own the website.
 5.  **Play Console**:
     - Log in to your Google Play Console ($25 one-time fee).

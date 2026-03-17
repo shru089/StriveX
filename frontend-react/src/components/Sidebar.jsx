@@ -105,6 +105,10 @@ export default function Sidebar({ activeView, onViewChange }) {
           <span className="sidebar-nav-icon">🌿</span>
           <span>Focus Zone</span>
         </button>
+        <button className="sidebar-nav-item" onClick={() => navigate('/billing')}>
+          <span className="sidebar-nav-icon">💎</span>
+          <span>Premium</span>
+        </button>
 
         <div className="sidebar-nav-label" style={{ marginTop: 24 }}>SOON</div>
         <button className="sidebar-nav-item sidebar-nav-item--soon" onClick={() => showNotif('export')}>

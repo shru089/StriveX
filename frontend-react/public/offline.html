@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StriveX — Offline</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0d0d1a 0%, #1a0d2e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            max-width: 500px;
+        }
+        .icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        h1 {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #fff, #a5b4fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        p {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: rgba(94, 106, 210, 0.15);
+            border: 1px solid rgba(94, 106, 210, 0.3);
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #fbbf24;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        button {
+            background: linear-gradient(135deg, #5e6ad2, #764ba2);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            padding: 14px 32px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 16px rgba(94, 106, 210, 0.4);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(94, 106, 210, 0.6);
+        }
+        .features {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+        }
+        .feature {
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            font-size: 0.9rem;
+        }
+        .feature-icon { font-size: 24px; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">📡</div>
+        <h1>You're Offline</h1>
+        <p>No worries! Your data is saved locally. StriveX will sync automatically when you're back online.</p>
+        
+        <div class="status">
+            <div class="dot"></div>
+            <span>Local mode active</span>
+        </div>
+        
+        <button onclick="window.location.reload()">🔄 Try Again</button>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">✅</div>
+                <div>View tasks</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📅</div>
+                <div>View schedule</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎯</div>
+                <div>Track goals</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-reload when connection restored
+        window.addEventListener('online', () => {
+            setTimeout(() => window.location.reload(), 1000);
+        });
+    </script>
+</body>
+</html>

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import Toast, { showToast } from '../components/Toast'
 import { useAuth } from '../context/AuthContext'
+import AchievementBadges from '../components/AchievementBadges'
 import db from '../db'
 import api from '../api'
 import { generateNudge } from '../gemini'
@@ -95,6 +96,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [weeklyData, setWeeklyData] = useState([])
   const [levelInfo, setLevelInfo] = useState(null)
+  const [isOnline, setIsOnline] = useState(navigator.onLine)
   // Calendar
   const [calDate, setCalDate] = useState(new Date())
   const [calMode, setCalMode] = useState('week')
@@ -106,6 +108,18 @@ export default function DashboardPage() {
 
   const { g: greeting, emoji: greetEmoji } = getGreeting(now.getHours())
   const displayName = user?.email?.split('@')[0] || 'Explorer'
+
+  // Network status detection
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
 
   // ── Hydrate ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -251,6 +265,29 @@ export default function DashboardPage() {
   return (
     <div className="db-page">
       <Toast />
+      {/* Online/Offline indicator */}
+      {!isOnline && (
+        <div style={{
+          position: 'fixed',
+          top: 20,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(245, 158, 11, 0.9)',
+          backdropFilter: 'blur(12px)',
+          padding: '10px 20px',
+          borderRadius: '12px',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          fontSize: '13px',
+          fontWeight: '600',
+          boxShadow: '0 4px 16px rgba(245, 158, 11, 0.4)'
+        }}>
+          <span>⚠️</span>
+          <span>You're offline — Changes saved locally</span>
+        </div>
+      )}
       <Sidebar activeView={view} onViewChange={setView} />
 
       <main className="db-main">
@@ -454,6 +491,9 @@ export default function DashboardPage() {
                 )}
               </div>
             </div>
+
+            {/* ── ACHIEVEMENT BADGES SECTION ── */}
+            <AchievementBadges />
           </div>
         )}
 

@@ -4,73 +4,132 @@ import Toast, { showToast } from '../components/Toast'
 import db from '../db'
 import './ProductivityZonePage.css'
 
-// ── Scenes ────────────────────────────────────────────────────────────────────
+// ── Scenes with animation types and icons ────────────────────────────────────
 const SCENES = [
-  { id: 'dark',    label: '🌌 Cosmos',    gradient: 'linear-gradient(135deg, #0d0d1a 0%, #1a0d2e 50%, #0d1a27 100%)' },
-  { id: 'aurora',  label: '🌌 Aurora',    gradient: 'linear-gradient(135deg, #0a1628 0%, #0d2b1e 40%, #1a0d2e 100%)' },
-  { id: 'sunset',  label: '🌅 Sunset',    gradient: 'linear-gradient(135deg, #1a0a0a 0%, #2e1500 50%, #1a0d2e 100%)' },
-  { id: 'ocean',   label: '🌊 Ocean',     gradient: 'linear-gradient(135deg, #040d1a 0%, #0a1e2e 50%, #041a2e 100%)' },
-  { id: 'forest',  label: '🌲 Forest',    gradient: 'linear-gradient(135deg, #040d0a 0%, #0a1e14 50%, #040d0a 100%)' },
-  { id: 'cafe',    label: '☕ Café',      gradient: 'linear-gradient(135deg, #1a1208 0%, #2e2010 50%, #1a1208 100%)' },
+  { id: 'dark',    label: 'Cosmos',     icon: '🌌', gradient: 'linear-gradient(135deg, #0d0d1a 0%, #1a0d2e 50%, #0d1a27 100%)', animType: 'stars' },
+  { id: 'aurora',  label: 'Aurora',     icon: '✨', gradient: 'linear-gradient(135deg, #0a1628 0%, #0d2b1e 40%, #1a0d2e 100%)', animType: 'aurora' },
+  { id: 'sunset',  label: 'Sunset',     icon: '🌅', gradient: 'linear-gradient(135deg, #1a0a0a 0%, #2e1500 50%, #1a0d2e 100%)', animType: 'particles' },
+  { id: 'ocean',   label: 'Ocean',      icon: '🌊', gradient: 'linear-gradient(135deg, #040d1a 0%, #0a1e2e 50%, #041a2e 100%)', animType: 'waves' },
+  { id: 'forest',  label: 'Forest',     icon: '🌲', gradient: 'linear-gradient(135deg, #040d0a 0%, #0a1e14 50%, #040d0a 100%)', animType: 'fireflies' },
+  { id: 'cafe',    label: 'Café',       icon: '☕', gradient: 'linear-gradient(135deg, #1a1208 0%, #2e2010 50%, #1a1208 100%)', animType: 'steam' },
 ]
 
-// ── Sound channels (procedural Web Audio) ────────────────────────────────────
+// ── Sound channels (procedural Web Audio) with improved icons ────────────────
 const SOUNDS = [
-  { id: 'rain',   label: '🌧️ Rain',   color: '#60a5fa' },
-  { id: 'white',  label: '🤍 White',  color: '#e5e7eb' },
-  { id: 'brown',  label: '☕ Brown',  color: '#a16207' },
-  { id: 'fire',   label: '🔥 Fire',   color: '#f97316' },
-  { id: 'forest', label: '🌲 Forest', color: '#22c55e' },
-  { id: 'waves',  label: '🌊 Waves',  color: '#0ea5e9' },
+  { id: 'rain',   label: 'Rain',     icon: '🌧️', color: '#60a5fa', desc: 'Gentle rainfall' },
+  { id: 'white',  label: 'White',    icon: '💫', color: '#e5e7eb', desc: 'Neutral noise' },
+  { id: 'brown',  label: 'Brown',    icon: '🍂', color: '#a16207', desc: 'Deep rumble' },
+  { id: 'fire',   label: 'Fire',     icon: '🔥', color: '#f97316', desc: 'Crackling flames' },
+  { id: 'forest', label: 'Forest',   icon: '🦗', color: '#22c55e', desc: 'Nature sounds' },
+  { id: 'waves',  label: 'Waves',    icon: '🌊', color: '#0ea5e9', desc: 'Ocean waves' },
 ]
 
-// ── Web Audio noise generator ───────────────────────────────────────────────
+// ── Web Audio noise generator - Enhanced for better quality ─────────────────
 function makeNoise(ctx, type) {
   const sr = ctx.sampleRate
-  const buf = ctx.createBuffer(1, sr * 5, sr)
-  const d = buf.getChannelData(0)
+  const buf = ctx.createBuffer(2, sr * 5, sr) // Stereo buffer
+  const dL = buf.getChannelData(0)
+  const dR = buf.getChannelData(1)
   
   if (type === 'white' || type === 'rain') {
-    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
+    for (let i = 0; i < dL.length; i++) {
+      dL[i] = Math.random() * 2 - 1
+      dR[i] = Math.random() * 2 - 1
+    }
     const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true
     const f = ctx.createBiquadFilter()
     f.type = type === 'rain' ? 'bandpass' : 'highshelf'
-    if (type === 'rain') { f.frequency.value = 4000; f.Q.value = 0.5 } 
-    else { f.frequency.value = 6000; f.gain.value = -8 }
-    src.connect(f); return { src, out: f }
-  }
-  if (type === 'brown') {
-    let last = 0
-    for (let i = 0; i < d.length; i++) {
-      const w = Math.random() * 2 - 1
-      d[i] = (last + 0.02 * w) / 1.02; last = d[i]; d[i] *= 3.5
+    if (type === 'rain') { 
+      f.frequency.value = 3000
+      f.Q.value = 0.7 
+    } else { 
+      f.frequency.value = 5000
+      f.gain.value = -10 
     }
-    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true
-    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 600
-    src.connect(f); return { src, out: f }
+    src.connect(f)
+    return { src, out: f }
   }
-  if (type === 'fire' || type === 'forest') {
-    let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0
-    for (let i = 0; i < d.length; i++) {
-      const w = Math.random()*2-1
-      b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759
-      b2=0.9690*b2+w*0.153852; b3=0.8665*b3+w*0.3104856
-      b4=0.5500*b4+w*0.5329522; b5=-0.7616*b5-w*0.016898
-      d[i]=(b0+b1+b2+b3+b4+b5+w*0.5362)*0.11
+  
+  if (type === 'brown') {
+    let lastL = 0, lastR = 0
+    for (let i = 0; i < dL.length; i++) {
+      const wL = Math.random() * 2 - 1
+      const wR = Math.random() * 2 - 1
+      dL[i] = (lastL + 0.02 * wL) / 1.02
+      dR[i] = (lastR + 0.02 * wR) / 1.02
+      lastL = dL[i]
+      lastR = dR[i]
+      dL[i] *= 4.5
+      dR[i] *= 4.5
     }
     const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true
     const f = ctx.createBiquadFilter()
-    f.type = 'peaking'; f.frequency.value = type === 'fire' ? 300 : 1500; f.gain.value = type === 'fire' ? 8 : -4
-    src.connect(f); return { src, out: f }
+    f.type = 'lowpass'
+    f.frequency.value = 500
+    f.Q.value = 0.5
+    src.connect(f)
+    return { src, out: f }
   }
-  // waves
-  for (let i = 0; i < d.length; i++) {
+  
+  if (type === 'fire') {
+    // Pink noise for fire crackling
+    let b0=0, b1=0, b2=0, b3=0, b4=0, b5=0, b6=0
+    for (let i = 0; i < dL.length; i++) {
+      const w = Math.random() * 2 - 1
+      b0 = 0.99886 * b0 + w * 0.0555179
+      b1 = 0.99332 * b1 + w * 0.0750759
+      b2 = 0.96900 * b2 + w * 0.1538520
+      b3 = 0.86650 * b3 + w * 0.3104856
+      b4 = 0.55000 * b4 + w * 0.5329522
+      b5 = -0.76160 * b5 - w * 0.0168980
+      dL[i] = (b0 + b1 + b2 + b3 + b4 + b5 + w * 0.5362) * 0.12
+      dR[i] = (b0 + b1 + b2 + b3 + b4 + b5 + w * 0.5362) * 0.12
+    }
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true
+    const f = ctx.createBiquadFilter()
+    f.type = 'peaking'
+    f.frequency.value = 400
+    f.gain.value = 6
+    f.Q.value = 1.2
+    src.connect(f)
+    return { src, out: f }
+  }
+  
+  if (type === 'forest') {
+    // Softer pink noise for nature
+    let b0=0, b1=0, b2=0
+    for (let i = 0; i < dL.length; i++) {
+      const w = Math.random() * 2 - 1
+      b0 = 0.998 * b0 + w * 0.06
+      b1 = 0.993 * b1 + w * 0.08
+      b2 = 0.970 * b2 + w * 0.16
+      dL[i] = (b0 + b1 + b2 + w * 0.5) * 0.15
+      dR[i] = (b0 + b1 + b2 + w * 0.5) * 0.15
+    }
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true
+    const f = ctx.createBiquadFilter()
+    f.type = 'peaking'
+    f.frequency.value = 1200
+    f.gain.value = -3
+    src.connect(f)
+    return { src, out: f }
+  }
+  
+  // waves - using modulated sine waves
+  for (let i = 0; i < dL.length; i++) {
     const t = i / sr
-    d[i] = Math.sin(2*Math.PI*0.12*t + Math.sin(2*Math.PI*0.05*t)*2) * 0.4 * (0.5+0.5*Math.random())
+    const wave1 = Math.sin(2 * Math.PI * 0.1 * t + Math.sin(2 * Math.PI * 0.03 * t) * 3)
+    const wave2 = Math.sin(2 * Math.PI * 0.15 * t + Math.sin(2 * Math.PI * 0.02 * t) * 2)
+    dL[i] = (wave1 + wave2) * 0.3 * (0.5 + 0.5 * Math.random())
+    dR[i] = (wave1 - wave2) * 0.3 * (0.5 + 0.5 * Math.random())
   }
   const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true
-  const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 700
-  src.connect(f); return { src, out: f }
+  const f = ctx.createBiquadFilter()
+  f.type = 'lowpass'
+  f.frequency.value = 600
+  f.Q.value = 0.8
+  src.connect(f)
+  return { src, out: f }
 }
 
 // ── Alarm Audio: plays a gentle bell tone ────────────────────────────────────
@@ -91,42 +150,125 @@ function playAlarmTone(ctx) {
   setTimeout(() => playAlarmTone(ctx), 4400)
 }
 
-// ── Canvas particle background ────────────────────────────────────────────────
-function useParticles(canvasRef) {
+// ── Enhanced Canvas particle background with mouse interaction ────────────────
+function useParticles(canvasRef, scene) {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     let animId
+    let mouseX = 0, mouseY = 0
+    
     const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight }
     resize()
     window.addEventListener('resize', resize)
     
-    const particles = Array.from({ length: 60 }, () => ({
+    // Track mouse
+    const handleMouseMove = (e) => {
+      mouseX = e.clientX
+      mouseY = e.clientY
+    }
+    canvas.addEventListener('mousemove', handleMouseMove)
+    
+    // Particle config based on scene
+    const getConfig = () => {
+      switch(scene?.animType) {
+        case 'stars': return { count: 150, speed: 0.3, size: [0.5, 2], connection: true }
+        case 'aurora': return { count: 80, speed: 0.5, size: [1, 3], connection: false, drift: true }
+        case 'particles': return { count: 100, speed: 0.4, size: [1, 2.5], connection: true }
+        case 'waves': return { count: 60, speed: 0.6, size: [2, 4], connection: false, wave: true }
+        case 'fireflies': return { count: 120, speed: 0.2, size: [1, 2], connection: false, glow: true }
+        case 'steam': return { count: 40, speed: 0.15, size: [2, 5], connection: false, rise: true }
+        default: return { count: 100, speed: 0.3, size: [1, 2], connection: true }
+      }
+    }
+    
+    const config = getConfig()
+    const particles = Array.from({ length: config.count }, (_, i) => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
-      r: Math.random() * 1.5 + 0.3,
-      vx: (Math.random() - 0.5) * 0.15,
-      vy: (Math.random() - 0.5) * 0.15,
-      opacity: Math.random() * 0.5 + 0.1
+      r: Math.random() * (config.size[1] - config.size[0]) + config.size[0],
+      vx: (Math.random() - 0.5) * config.speed,
+      vy: config.rise ? -Math.random() * config.speed * 0.5 : (Math.random() - 0.5) * config.speed,
+      opacity: Math.random() * 0.5 + 0.3,
+      phase: Math.random() * Math.PI * 2,
+      originalY: Math.random() * window.innerHeight
     }))
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-      particles.forEach(p => {
-        p.x += p.vx; p.y += p.vy
-        if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0
-        if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0
+      
+      particles.forEach((p, i) => {
+        // Movement
+        if (config.wave) {
+          p.x += Math.sin(p.phase) * 0.3
+          p.y += Math.cos(p.phase) * 0.2
+          p.phase += 0.02
+        } else if (config.drift) {
+          p.x += Math.sin(Date.now() * 0.001 + p.phase) * 0.5
+          p.y += p.vy
+        } else {
+          p.x += p.vx
+          p.y += p.vy
+        }
+        
+        // Mouse interaction - particles flee from cursor
+        const dx = mouseX - p.x
+        const dy = mouseY - p.y
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist < 150) {
+          const angle = Math.atan2(dy, dx)
+          p.x -= Math.cos(angle) * 2
+          p.y -= Math.sin(angle) * 2
+        }
+        
+        // Wrap around screen
+        if (p.x < -50) p.x = canvas.width + 50
+        if (p.x > canvas.width + 50) p.x = -50
+        if (p.y < -50) p.y = canvas.height + 50
+        if (p.y > canvas.height + 50) p.y = -50
+        
+        // Draw particle
         ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(160,180,255,${p.opacity})`
+        if (config.glow) {
+          const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 2)
+          gradient.addColorStop(0, `rgba(160, 200, 100, ${p.opacity})`)
+          gradient.addColorStop(1, 'rgba(160, 200, 100, 0)')
+          ctx.fillStyle = gradient
+          ctx.arc(p.x, p.y, p.r * 2, 0, Math.PI * 2)
+        } else {
+          ctx.fillStyle = `rgba(160, 180, 255, ${p.opacity})`
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
+        }
         ctx.fill()
+        
+        // Draw connections
+        if (config.connection) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const p2 = particles[j]
+            const dx = p.x - p2.x
+            const dy = p.y - p2.y
+            const dist = Math.sqrt(dx * dx + dy * dy)
+            if (dist < 120) {
+              ctx.beginPath()
+              ctx.moveTo(p.x, p.y)
+              ctx.lineTo(p2.x, p2.y)
+              ctx.strokeStyle = `rgba(160, 180, 255, ${0.15 * (1 - dist / 120)})`
+              ctx.lineWidth = 0.5
+              ctx.stroke()
+            }
+          }
+        }
       })
       animId = requestAnimationFrame(draw)
     }
     draw()
-    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', resize) }
-  }, [])
+    return () => {
+      cancelAnimationFrame(animId)
+      window.removeEventListener('resize', resize)
+      canvas.removeEventListener('mousemove', handleMouseMove)
+    }
+  }, [scene])
 }
 
 // ── Draggable wrapper ─────────────────────────────────────────────────────────
@@ -159,12 +301,35 @@ function PomodoroWidget({ onDrag }) {
   useEffect(() => {
     if (running) {
       ivRef.current = setInterval(() => setSecs(x => {
-        if (x <= 1) { clearInterval(ivRef.current); setRunning(false); showToast(mode === 'focus' ? '🍅 Session done!' : '⏰ Break over!', 'success'); if(mode==='focus') setSessions(n=>n+1); return 0 }
+        if (x <= 1) { 
+          clearInterval(ivRef.current) 
+          setRunning(false)
+          showToast(mode === 'focus' ? '🍅 Session done!' : '⏰ Break over!', 'success')
+          if(mode==='focus') {
+            setSessions(n=>n+1)
+            // Play completion sound
+            try {
+              const ctx = new (window.AudioContext || window.webkitAudioContext)()
+              const osc = ctx.createOscillator()
+              const gain = ctx.createGain()
+              osc.connect(gain)
+              gain.connect(ctx.destination)
+              osc.frequency.setValueAtTime(523.25, ctx.currentTime) // C5
+              osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1) // E5
+              osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2) // G5
+              gain.gain.setValueAtTime(0.3, ctx.currentTime)
+              gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6)
+              osc.start()
+              osc.stop(ctx.currentTime + 0.6)
+            } catch(e) { console.log('Audio play failed:', e) }
+          }
+          return 0 
+        }
         return x - 1
       }), 1000)
     } else clearInterval(ivRef.current)
     return () => clearInterval(ivRef.current)
-  }, [running])
+  }, [running, mode])
 
   const switchMode = (m) => { setMode(m); setSecs(MODES[m]); setRunning(false); clearInterval(ivRef.current) }
 
@@ -295,20 +460,27 @@ function SoundWidget({ onDrag }) {
 
   const toggle = (id, type) => {
     if (active[id]) {
-      nodesRef.current[id]?.gainNode?.disconnect()
       nodesRef.current[id]?.src?.stop()
+      nodesRef.current[id]?.out?.disconnect()
       delete nodesRef.current[id]
       setActive(a => ({...a, [id]: false}))
+      showToast(`🔇 ${SOUNDS.find(s => s.id === id)?.label} disabled`, 'info')
     } else {
       const ctx = getCtx()
       try {
         const { src, out } = makeNoise(ctx, type)
-        const gainNode = ctx.createGain(); gainNode.gain.value = vols[id]
-        out.connect(gainNode); gainNode.connect(masterRef.current)
-        src.start()
-        nodesRef.current[id] = { src, gainNode }
+        const gainNode = ctx.createGain()
+        gainNode.gain.value = vols[id]
+        out.connect(gainNode)
+        gainNode.connect(masterRef.current)
+        src.start(0)
+        nodesRef.current[id] = { src, out, gainNode }
         setActive(a => ({...a, [id]: true}))
-      } catch(e) { console.error('Audio error:', e) }
+        showToast(`🔊 ${SOUNDS.find(s => s.id === id)?.label} enabled`, 'success')
+      } catch(e) { 
+        console.error('Audio error:', e)
+        showToast('❌ Failed to play sound', 'error')
+      }
     }
   }
 
@@ -323,11 +495,13 @@ function SoundWidget({ onDrag }) {
       <div className="pz-sound-grid">
         {SOUNDS.map(s => (
           <div key={s.id} className="pz-sound-ch">
-            <button className={`pz-sound-btn${active[s.id]?' active':''}`}
+            <button 
+              className={`pz-sound-btn${active[s.id]?' active':''}`}
               onClick={() => toggle(s.id, s.id)}
-              style={active[s.id] ? { borderColor: s.color, boxShadow: `0 0 12px ${s.color}33` } : {}}>
-              {s.label}
-              {active[s.id] && <span className="pz-sound-dot" style={{background:s.color}}/>}
+              style={active[s.id] ? { borderColor: s.color, boxShadow: `0 0 16px ${s.color}44`, background: `rgba(${s.color === '#60a5fa' ? '96,165,250' : s.color === '#e5e7eb' ? '229,231,235' : s.color === '#a16207' ? '161,98,7' : s.color === '#f97316' ? '249,115,22' : s.color === '#22c55e' ? '34,197,94' : '14,165,233'},0.15)` } : {}}>
+              <span style={{fontSize: '16px'}}>{s.icon}</span>
+              <span>{s.label}</span>
+              {active[s.id] && <span className="pz-sound-dot" style={{background:s.color, boxShadow: `0 0 8px ${s.color}`}}/>}
             </button>
             <input type="range" min="0" max="1" step="0.05" value={vols[s.id]}
               onChange={e => setVol(s.id, +e.target.value)} className="pz-slider"
@@ -390,7 +564,23 @@ export default function ProductivityZonePage() {
   const [widgets, setWidgets] = useState({ pomodoro: true, clock: true, sound: true, todo: false })
   const audioCtxRef = useRef(null)
 
-  useParticles(canvasRef)
+  // Pomodoro persistence
+  useEffect(() => {
+    const saved = localStorage.getItem('sx_pomodoro')
+    if (saved) {
+      const data = JSON.parse(saved)
+      setMode(data.mode || 'focus')
+      setSecs(data.secs || 25 * 60)
+      setRunning(data.running || false)
+      setSessions(data.sessions || 0)
+    }
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem('sx_pomodoro', JSON.stringify({ mode, secs, running, sessions }))
+  }, [mode, secs, running, sessions])
+
+  useParticles(canvasRef, scene)
 
   const getAudioCtx = () => {
     if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)()
@@ -420,7 +610,10 @@ export default function ProductivityZonePage() {
         <div className="pz-scenes">
           {SCENES.map(s => (
             <button key={s.id} className={`pz-scene${scene.id===s.id?' active':''}`}
-              onClick={() => setScene(s)}>{s.label}</button>
+              onClick={() => setScene(s)}>
+              <span style={{fontSize: '16px'}}>{s.icon}</span>
+              <span>{s.label}</span>
+            </button>
           ))}
         </div>
 

@@ -1,0 +1,177 @@
+/* Achievement Badges Component */
+.badge-notification {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  background: linear-gradient(135deg, rgba(8, 9, 10, 0.98), rgba(20, 22, 30, 0.98));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(94, 106, 210, 0.4);
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(94, 106, 210, 0.2);
+  z-index: 10000;
+  animation: slideInRight 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(400px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.badge-icon-large {
+  font-size: 48px;
+  animation: bounce 0.6s ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.badge-content strong {
+  display: block;
+  color: #fff;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.badge-content p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.achievement-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.panel-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+.panel-header button {
+  background: rgba(94, 106, 210, 0.15);
+  border: 1px solid rgba(94, 106, 210, 0.3);
+  border-radius: 8px;
+  color: #a5b4fc;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.panel-header button:hover {
+  background: rgba(94, 106, 210, 0.25);
+  color: #fff;
+}
+
+.recent-badges {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+}
+
+.all-badges {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
+}
+
+.badge.earned {
+  background: linear-gradient(135deg, rgba(94, 106, 210, 0.1), rgba(118, 75, 162, 0.05));
+  border-color: rgba(94, 106, 210, 0.3);
+}
+
+.badge.earned:hover {
+  transform: translateY(-4px);
+  border-color: rgba(94, 106, 210, 0.5);
+  box-shadow: 0 8px 20px rgba(94, 106, 210, 0.3);
+}
+
+.badge.locked {
+  opacity: 0.4;
+  filter: grayscale(100%);
+}
+
+.badge-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.badge-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.badge-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.badge-desc {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.no-badges {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 32px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .badge-notification {
+    top: auto;
+    bottom: 100px;
+    left: 20px;
+    right: 20px;
+  }
+  
+  .recent-badges,
+  .all-badges {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  }
+}

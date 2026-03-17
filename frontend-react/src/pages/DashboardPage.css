@@ -1188,14 +1188,28 @@
   border-radius: 9px;
   cursor: pointer;
   font-size: 0.85rem;
-  transition: all 0.15s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   color: rgba(255, 255, 255, 0.6);
+  overflow: hidden;
 }
-
+.cal-day::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(94,106,210,0.2), transparent);
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.2s;
+}
+.cal-day:hover::before {
+  opacity: 1;
+  transform: scale(1);
+}
 .cal-day:hover {
   background: rgba(255, 255, 255, 0.06);
   color: #fff;
+  transform: scale(1.05);
 }
 
 .cal-day.today {
@@ -1514,6 +1528,11 @@
   background: rgba(255,255,255,0.025);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cal-topbar:hover {
+  background: rgba(255,255,255,0.035);
+  border-color: rgba(255,255,255,0.1);
 }
 .cal-topbar-left { display: flex; align-items: center; gap: 10px; }
 .cal-today-btn {
@@ -1543,13 +1562,26 @@
   padding: 10px 4px;
   cursor: pointer;
   border-radius: 10px 10px 0 0;
-  transition: background 0.18s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   gap: 3px;
+  position: relative;
+  overflow: hidden;
 }
-.week-day-tab:hover { background: rgba(255,255,255,0.04); }
+.week-day-tab::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent, rgba(94,106,210,0.1));
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.week-day-tab:hover::before { opacity: 1 }
+.week-day-tab:hover { background: rgba(255,255,255,0.04); transform: translateY(-2px) }
 .week-day-tab.today {
   background: rgba(94,106,210,0.13);
   border-bottom: 2px solid #5e6ad2;
+  transform: translateY(-1px);
+  box-shadow: 0 -4px 12px rgba(94,106,210,0.2);
 }
 .wdt-name { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.38); text-transform: uppercase; letter-spacing: 0.06em; }
 .wdt-num  { font-size: 1.1rem; font-weight: 800; color: rgba(255,255,255,0.7); }
@@ -1594,19 +1626,29 @@
   background: rgba(255,255,255,0.05);
 }
 
-/* Now indicator */
+/* Now indicator with pulse animation */
 .week-now-line {
   position: absolute; left: 0; right: 0;
-  border-top: 1.5px solid #ef4444;
+  border-top: 2px solid #ef4444;
   z-index: 10; pointer-events: none;
   display: flex; align-items: center;
+  animation: pulse-line 2s ease-in-out infinite;
+}
+@keyframes pulse-line {
+  0%, 100% { opacity: 0.6; border-width: 2px }
+  50% { opacity: 1; border-width: 2.5px }
 }
 .week-now-dot {
-  width: 8px; height: 8px;
+  width: 10px; height: 10px;
   border-radius: 50%; background: #ef4444;
   margin-left: 54px;
-  box-shadow: 0 0 8px rgba(239,68,68,0.8);
   flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(239,68,68,0.9);
+  animation: dot-pulse 2s ease-in-out infinite;
+}
+@keyframes dot-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 12px rgba(239,68,68,0.9) }
+  50% { transform: scale(1.2); box-shadow: 0 0 20px rgba(239,68,68,0.6) }
 }
 
 /* Columns */

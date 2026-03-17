@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, time, date
-from models import Task, Commitment, DailyLog, Goal
+from models import Task, Commitment, DailyLog, Goal  # type: ignore[import-not-found]
 import json
 
 
@@ -15,8 +15,8 @@ class SchedulingEngine:
         self.wake_time = self._parse_time(user.wake_time or '07:00')
         self.sleep_time = self._parse_time(user.sleep_time or '23:00')
         # Behavioral intelligence link
-        from intelligence import BehavioralIntelligenceEngine
-        self.intelligence = BehavioralIntelligenceEngine(user)
+        from intelligence import BehavioralIntelligenceEngine  # type: ignore[import-not-found]
+        self.intelligence = BehavioralIntelligenceEngine(user)  # type: ignore[call-arg]
         self.behavior_recs = []
         try:
             analysis = self.intelligence.full_analysis()
@@ -59,7 +59,7 @@ class SchedulingEngine:
     
     def _get_commitment_hours(self, target_date):
         """Get total commitment hours for a specific date"""
-        from models import db
+        from models import db  # type: ignore[import-not-found]
         day_of_week = target_date.weekday()
         commitments = Commitment.query.filter_by(user_id=self.user.id).filter(
             db.or_(
@@ -144,7 +144,7 @@ class SchedulingEngine:
         
         if missed_today:
             missed_hours = sum(t.estimated_hours for t in missed_today)
-            tomorrow_pct = round((missed_hours / max(1, remaining_work_hours)) * 100, 1)
+            tomorrow_pct = round((missed_hours / max(1, remaining_work_hours)) * 100, 1)  # type: ignore[call-overload]
             consequence = f"Missing today adds {tomorrow_pct}% to tomorrow's workload"
         elif risk_level == 'LOW':
             consequence = f"You're on track — {days_remaining} days to complete {remaining_work_hours:.1f}h of work"
@@ -153,11 +153,11 @@ class SchedulingEngine:
         else:
             consequence = f"At risk: {remaining_work_hours:.1f}h remaining, only {available_hours * efficiency_factor:.1f}h realistic capacity"
         
-        return round(score, 2), risk_level, consequence
+        return round(score, 2), risk_level, consequence  # type: ignore[call-overload]
     
     def _get_efficiency_factor(self):
         """Get recent completion efficiency from daily logs"""
-        from models import db
+        from models import db  # type: ignore[import-not-found]
         recent_logs = DailyLog.query.filter_by(user_id=self.user.id).order_by(
             DailyLog.date.desc()
         ).limit(7).all()
@@ -327,7 +327,7 @@ class SchedulingEngine:
             tasks = [
                 {
                     "title": f"{self.goal.title} - Part {i+1}",
-                    "hours": round(hours_per_task, 1),
+                    "hours": round(hours_per_task, 1),  # type: ignore[call-overload]
                     "difficulty": min(5, max(1, (i % 3) + 2))
                 }
                 for i in range(num_tasks)
@@ -379,7 +379,7 @@ class SchedulingEngine:
             day_tasks = []
             
             while day_hours < min(target_hours_per_day, available_hours) and remaining_tasks:
-                task = remaining_tasks[0]
+                task = remaining_tasks[0]  # type: ignore
                 
                 if day_hours + task['hours'] <= available_hours:
                     day_tasks.append(task)
@@ -436,7 +436,7 @@ class SchedulingEngine:
                         latency_shift = rec["params"].get("shift_minutes", 0)
                 
                 # Apply shift to search start
-                effective_search_start = current_time + latency_shift
+                effective_search_start = current_time + latency_shift  # type: ignore[operator]
                 
                 slot_start = self._find_next_slot(
                     effective_search_start, task_duration_minutes,
@@ -523,7 +523,7 @@ class SchedulingEngine:
     
     def _get_day_commitments(self, target_date):
         """Get commitments for a specific day as time ranges"""
-        from models import db
+        from models import db  # type: ignore[import-not-found]
         day_of_week = target_date.weekday()
         commitments = Commitment.query.filter_by(user_id=self.user.id).filter(
             db.or_(
@@ -556,8 +556,8 @@ class SchedulingEngine:
         """Find available slot within a specific time window"""
         search_start = max(current_time, window_start)
         
-        while search_start + duration <= window_end:
-            slot_end = search_start + duration
+        while search_start + duration <= window_end:  # type: ignore[operator]
+            slot_end = search_start + duration  # type: ignore[operator]
             overlaps = False
             
             for commit_start, commit_end in commitments:

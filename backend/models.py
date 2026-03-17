@@ -33,6 +33,15 @@ class User(db.Model):
     xp = db.Column(db.Integer, default=0)
     streak_count = db.Column(db.Integer, default=0)
     last_activity_date = db.Column(db.Date)
+    
+    # Subscription & Billing
+    subscription_tier = db.Column(db.String(20), default='free')  # free, premium, pro
+    subscription_updated_at = db.Column(db.DateTime)
+    subscription_cancelled_at = db.Column(db.DateTime)
+    
+    # Stripe integration
+    stripe_customer_id = db.Column(db.String(100), unique=True)  # Stripe customer ID
+    stripe_subscription_id = db.Column(db.String(100), unique=True)  # Active subscription ID
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -59,6 +68,8 @@ class User(db.Model):
             'name': self.name,
             'avatar_url': self.avatar_url,
             'oauth_provider': self.oauth_provider,
+            'subscription_tier': self.subscription_tier or 'free',
+            'stripe_customer_id': self.stripe_customer_id,  # For Stripe dashboard lookup
         }
 
 
