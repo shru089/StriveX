@@ -3,33 +3,45 @@ StriveX Progress Autopsy Engine
 AI-powered post-mortem analysis of completed/failed goals
 Provides deep insights and recommendations for future attempts
 """
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, User, Goal, Task
-from sqlalchemy import func
+from flask import Blueprint, request, jsonify  # type: ignore
+from models import db, User, Goal, Task  # type: ignore
+from sqlalchemy import func  # type: ignore
 from datetime import datetime, timedelta
-from intelligence import gemini
+from intelligence import gemini  # type: ignore
 import json
-from loguru import logger
+from functools import wraps
+from typing import Any, cast
+from loguru import logger  # type: ignore
 
 autopsy = Blueprint('autopsy', __name__)
+
+
+# ---------------------------------------------------------------------------
+# Auth helper: import dynamically to avoid circular import at module load time
+# ---------------------------------------------------------------------------
+def _token_required(f):
+    """Thin wrapper that delegates to app.token_required, imported lazily."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        from app import token_required as _tr  # type: ignore # noqa: PLC0415
+        return _tr(f)(*args, **kwargs)
+    return decorated
 
 
 # ════════════════════════════════════════════════════════════
 # PROGRESS AUTOPSY ENGINE
 # ════════════════════════════════════════════════════════════
 
-@autopsy.route('/api/autopsy/goal/<int:goal_id>', methods=['GET'])
-@jwt_required()
-def generate_goal_autopsy(goal_id):
+@autopsy.route('/goal/<int:goal_id>', methods=['GET'])
+@_token_required
+def generate_goal_autopsy(current_user, goal_id):
     """
     Generate comprehensive post-mortem analysis for a goal.
     Analyzes success factors, failure points, and provides actionable recommendations.
     """
-    current_user_id = get_jwt_identity()
     goal = Goal.query.get(goal_id)
     
-    if not goal or goal.user_id != current_user_id:
+    if not goal or goal.user_id != current_user.id:
         return jsonify({'error': 'Goal not found'}), 404
     
     # Get all tasks for this goal
@@ -119,11 +131,11 @@ def generate_goal_autopsy(goal_id):
         })
     
     # 4. Ghost mode usage (if tracked)
-    ghost_tasks = [t for t in tasks if getattr(t, 'is_ghost', False)]
+    ghost_tasks: list[Task] = [t for t in tasks if getattr(t, 'is_ghost', False)]
     if ghost_tasks:
-        ghost_completion = sum(1 for t in ghost_tasks if t.status == 'completed')
+        ghost_completion = sum(1 for t in ghost_tasks if cast(Any, t).status == 'completed')
         ghost_rate = ghost_completion / len(ghost_tasks) * 100
-        regular_completion = sum(1 for t in tasks if not getattr(t, 'is_ghost', False) and t.status == 'completed')
+        regular_completion = sum(1 for t in tasks if not getattr(t, 'is_ghost', False) and cast(Any, t).status == 'completed')
         regular_rate = regular_completion / (total_tasks - len(ghost_tasks)) * 100 if total_tasks > len(ghost_tasks) else 0
         
         if ghost_rate > regular_rate:
@@ -168,15 +180,15 @@ def generate_goal_autopsy(goal_id):
         'goal_title': goal.title,
         'status': '✅ Success' if completion_rate >= 80 else '⚠️ Partial' if completion_rate >= 40 else '❌ Failed',
         'metrics': {
-            'completion_rate': round(completion_rate, 1),
+            'completion_rate': round(float(completion_rate), 1),  # type: ignore
             'tasks_completed': f'{completed_tasks}/{total_tasks}',
             'duration': {
                 'planned_days': planned_duration,
                 'actual_days': actual_duration,
-                'variance_percent': round((actual_duration - planned_duration) / max(1, planned_duration) * 100, 1) if planned_duration else None
+                'variance_percent': round(float((actual_duration - planned_duration) / max(1, planned_duration) * 100), 1) if planned_duration else None  # type: ignore
             },
             'effort_estimation': {
-                'estimated_hours': round(estimated_total_hours, 1),
+                'estimated_hours': round(float(estimated_total_hours), 1),  # type: ignore
                 'accuracy': 'accurate' if actual_hours and 0.8 <= estimated_total_hours / actual_hours <= 1.2 else 'underestimated' if actual_hours and estimated_total_hours < actual_hours else 'overestimated'
             }
         },
@@ -245,11 +257,16 @@ def forecast_next_attempt(goal, tasks, current_success_rate, recommendations):
     adjusted_probability = min(95, base_probability + adjustment)
     
     return {
-        'current_success_rate': round(current_success_rate, 1),
-        'projected_success_rate': round(adjusted_probability, 1),
-        'improvement_potential': round(adjustment, 1),
+        'current_success_rate': round(float(current_success_rate), 1),  # type: ignore
+        'projected_success_rate': round(float(adjusted_probability), 1),  # type: ignore
+        'improvement_potential': round(float(adjustment), 1),  # type: ignore
         'key_levers': [r['action'] for r in recommendations[:3]],
-        'timeline_recommendation': f'{int(goal.deadline.days * 1.5 if goal.deadline else 30)} days (add 50% buffer)' if hasattr(goal, 'deadline') and goal.deadline else '30-45 days'
+        # goal.deadline is a date object — compute days from today, not .days on a date
+        'timeline_recommendation': (
+            f'{int((goal.deadline - datetime.utcnow().date()).days * 1.5)} days (add 50% buffer)'
+            if goal.deadline
+            else '30-45 days'
+        )
     }
 
 
@@ -257,21 +274,20 @@ def forecast_next_attempt(goal, tasks, current_success_rate, recommendations):
 # COMPARATIVE AUTOPSY (Multiple Goals)
 # ════════════════════════════════════════════════════════════
 
-@autopsy.route('/api/autopsy/compare', methods=['POST'])
-@jwt_required()
-def compare_goals():
+@autopsy.route('/compare', methods=['POST'])
+@_token_required
+def compare_goals(current_user):
     """
     Compare multiple goals to identify patterns across attempts.
     Useful for users who repeatedly attempt similar goals.
     """
-    current_user_id = get_jwt_identity()
     data = request.json or {}
     goal_ids = data.get('goal_ids', [])
     
     if len(goal_ids) < 2:
         return jsonify({'error': 'Need at least 2 goals to compare'}), 400
     
-    goals = Goal.query.filter(Goal.id.in_(goal_ids), Goal.user_id == current_user_id).all()
+    goals = Goal.query.filter(Goal.id.in_(goal_ids), Goal.user_id == current_user.id).all()
     
     if len(goals) != len(goal_ids):
         return jsonify({'error': 'Some goals not found'}), 404
@@ -284,7 +300,7 @@ def compare_goals():
         comparisons.append({
             'goal_id': goal.id,
             'title': goal.title,
-            'completion_rate': round(completed / max(1, len(tasks)) * 100, 1),
+            'completion_rate': round(float(completed / max(1, len(tasks)) * 100), 1),  # type: ignore
             'duration_days': (goal.completed_at - goal.created_at).days if goal.completed_at and goal.created_at else None,
             'task_count': len(tasks),
             'avg_difficulty': sum(t.difficulty for t in tasks) / len(tasks) if tasks else 0

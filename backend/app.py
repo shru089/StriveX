@@ -22,7 +22,6 @@ from functools import wraps
 from datetime import datetime, timedelta
 from typing import Any, cast
 from dotenv import load_dotenv  # type: ignore[import-untyped]
-
 load_dotenv()
 
 # ============= UPGRADE 4: Sentry (error tracking) =============
@@ -98,18 +97,22 @@ CORS(app, origins=[ALLOWED_ORIGIN], supports_credentials=True,
      methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 
 # ============= RATE LIMITING =============
-# Developer Note: For local development and testing, we use a DummyLimiter to prevent
-# blocking ourselves. 
-# TODO(Production): Uncomment the real Limiter below and remove DummyLimiter before launch.
-# limiter = Limiter(get_remote_address, app=app, default_limits=[], storage_uri='memory://')
+# Controlled via env var: set LOCAL_DEV=1 to disable rate limiting locally.
+# In production, remove LOCAL_DEV (or set to 0) to enable real rate limits.
 
 class DummyLimiter:
-    """Mock rate limiter for local development."""
+    """Mock rate limiter for local development (LOCAL_DEV=1)."""
     def limit(self, *args, **kwargs):
         def decorator(f):
             return f
         return decorator
-limiter = DummyLimiter()
+
+if os.environ.get('LOCAL_DEV'):
+    # Use Any for limiter to satisfy all decorator call sites across environments
+    limiter = cast(Any, DummyLimiter())
+    logger.warning('Rate limiting DISABLED (LOCAL_DEV=1). Do not use in production!')
+else:
+    limiter = cast(Any, Limiter(get_remote_address, app=app, default_limits=[], storage_uri='memory://'))
 
 # ============= AI RESPONSE CACHE (minimize Gemini API calls) =============
 # Simple in-memory cache: {cache_key: {'value': ..., 'expires': datetime}}
@@ -290,6 +293,18 @@ def token_required(f):
     return decorated
 
 
+def get_current_user():
+    """Helper used by premium.py decorators to resolve the current user from the request."""
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not token:
+        return None
+    try:
+        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        return db.session.get(User, data['user_id'])
+    except Exception:
+        return None
+
+
 # ============= HEALTH CHECK =============
 
 @app.route('/api/health', methods=['GET'])
@@ -376,11 +391,20 @@ def google_callback():
 
         tokens = create_tokens(user.id)
         frontend = os.environ.get('CORS_ORIGIN', 'http://localhost:3001')
-        return redirect(
-            f"{frontend}/dashboard.html"
-            f"?access_token={tokens['access_token']}"
-            f"&refresh_token={tokens['refresh_token']}"
+        # Tokens are passed via a short-lived HttpOnly cookie instead of URL params
+        # to avoid leaking them into browser history, logs, and Referer headers.
+        payload = json.dumps({'access_token': tokens['access_token'], 'refresh_token': tokens['refresh_token']})
+        import base64
+        encoded = base64.urlsafe_b64encode(payload.encode()).decode()
+        response = redirect(f"{frontend}/oauth-callback.html")
+        response.set_cookie(
+            'oauth_tokens', encoded,
+            max_age=60,           # Expires in 60 seconds — frontend must consume immediately
+            httponly=True,
+            secure=request.is_secure,
+            samesite='Lax'
         )
+        return response
     except Exception as e:
         logger.error(f"Google OAuth callback error: {e}")
         return redirect(f"{os.environ.get('CORS_ORIGIN', 'http://localhost:3001')}/index.html?error=oauth_failed")
@@ -618,18 +642,14 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        token = jwt.encode({
-            'user_id': new_user.id,
-            'iss': 'strivex',
-            'iat': datetime.utcnow(),
-            'exp': datetime.utcnow() + timedelta(days=7)
-        }, app.config['SECRET_KEY'], algorithm='HS256')
+        # Use the proper token-rotation system (15-min access + 30-day refresh)
+        tokens = create_tokens(new_user.id)
     except Exception as e:
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-    return jsonify({'message': 'Account created successfully', 'token': token, 'user': new_user.to_dict()}), 201
+    return jsonify({'message': 'Account created successfully', **tokens, 'user': new_user.to_dict()}), 201
 
 
 @app.route('/api/auth/login', methods=['POST'])
@@ -643,17 +663,13 @@ def login():
         return jsonify({'error': 'Email and password required'}), 400
 
     user = User.query.filter_by(email=email).first()
-    if not user or not bcrypt.check_password_hash(user.password_hash, password):
+    # Guard against OAuth-only users who have no password_hash
+    if not user or not user.password_hash or not bcrypt.check_password_hash(user.password_hash, password):
         return jsonify({'error': 'Invalid credentials'}), 401
 
-    token = jwt.encode({
-        'user_id': user.id,
-        'iss': 'strivex',
-        'iat': datetime.utcnow(),
-        'exp': datetime.utcnow() + timedelta(days=7)
-    }, app.config['SECRET_KEY'], algorithm='HS256')
-
-    return jsonify({'message': 'Login successful', 'token': token, 'user': user.to_dict()}), 200
+    # Use the proper token-rotation system (15-min access + 30-day refresh)
+    tokens = create_tokens(user.id)
+    return jsonify({'message': 'Login successful', **tokens, 'user': user.to_dict()}), 200
 
 
 # ============= ONBOARDING ROUTES =============
@@ -731,8 +747,11 @@ def create_goal(current_user):
     if not success:
         return jsonify({'error': message}), 400
     
-    for day_plan in weekly_plan:
-        for block in day_plan['time_blocks']:
+    # Type-hint weekly_plan to resolve IDE 'Unknown' member errors
+    plan: list[dict[str, Any]] = cast(list[dict[str, Any]], weekly_plan)
+    
+    for day_plan in plan:
+        for block in cast(list[dict[str, Any]], day_plan['time_blocks']):
             if block['type'] == 'task':
                 task_data = block['task_data']
                 
@@ -741,7 +760,7 @@ def create_goal(current_user):
                     title=task_data['title'],
                     estimated_hours=task_data['hours'],
                     difficulty=task_data['difficulty'],
-                    scheduled_date=datetime.fromisoformat(day_plan['date']).date(),
+                    scheduled_date=datetime.fromisoformat(str(day_plan['date'])).date(),
                     scheduled_start_time=block['start_time'],
                     scheduled_end_time=block['end_time'],
                     xp_value=10 + (task_data['difficulty'] * 5)
@@ -1304,6 +1323,7 @@ def log_behavior_event(current_user):
     }
     
     _log_behavior_event(current_user.id, task_id, event_type, metadata)
+    db.session.commit()  # _log_behavior_event adds to session but does NOT commit
     return jsonify({'message': 'Event logged'}), 201
 
 
@@ -1327,115 +1347,8 @@ def _log_behavior_event(user_id, task_id, event_type, metadata=None):
     # Don't commit here — caller handles commit
 
 
-# ============= ANALYTICS ROUTES =============
-
-@app.route('/api/analytics/patterns', methods=['GET'])
-@token_required
-def get_patterns(current_user):
-    try:
-        engine = BehavioralIntelligenceEngine(current_user)
-        patterns = engine.full_analysis()
-        return jsonify(patterns), 200
-    except Exception as e:
-        logger.error(f'Pattern analysis error: {e}')
-        return jsonify({'patterns': [], 'recommendations': [], 'burnout_risk': False}), 200
-
-
-@app.route('/api/analytics/deadline-risk/<int:goal_id>', methods=['GET'])
-@token_required
-def get_deadline_risk(current_user, goal_id):
-    goal = Goal.query.filter_by(id=goal_id, user_id=current_user.id).first()
-    if not goal:
-        return jsonify({'error': 'Goal not found'}), 404
-
-    try:
-        # Derive risk from deadline and progress
-        deadline = goal.deadline or goal.end_date
-        progress = goal.progress or 0
-        days_left = (deadline - datetime.utcnow().date()).days if deadline else 999
-        if days_left < 3 and progress < 80:
-            risk_level, message = 'high', f'Only {days_left}d left with {progress}% done — push hard!'
-        elif days_left < 7 and progress < 50:
-            risk_level, message = 'high', f'Less than a week and only {progress}% complete.'
-        elif days_left < 14 and progress < 30:
-            risk_level, message = 'medium', 'Falling behind — consider re-prioritising.'
-        else:
-            risk_level, message = 'low', 'On track — keep the momentum!'
-    except Exception:
-        risk_level, message = 'low', 'Keep going!'
-
-    return jsonify({'risk_level': risk_level, 'message': message}), 200
-
-
-@app.route('/api/analytics/heatmap', methods=['GET'])
-@token_required
-def get_heatmap(current_user):
-    """PRD 6.2: Procrastination heatmap data — resistance events by hour/day"""
-    events = BehaviorEvent.query.filter_by(user_id=current_user.id).filter(
-        BehaviorEvent.event_type.in_(['skip', 'start_late', 'hover'])
-    ).order_by(BehaviorEvent.timestamp.desc()).limit(500).all()
-    
-    # Aggregate by day_of_week × hour_of_day
-    grid = {}
-    for event in events:
-        metadata = json.loads(event.metadata_json) if event.metadata_json else {}
-        hour = metadata.get('hour_of_day', event.timestamp.hour)
-        day = metadata.get('day_of_week', event.timestamp.weekday())
-        key = f"{day}_{hour}"
-        grid[key] = grid.get(key, 0) + 1
-    
-    # Build 7×24 grid
-    heatmap = [[0] * 24 for _ in range(7)]
-    for key, count in grid.items():
-        parts = key.split('_')
-        if len(parts) == 2:
-            d, h = int(parts[0]), int(parts[1])
-            heatmap[d][h] = count
-    
-    return jsonify({
-        'heatmap': heatmap,
-        'days': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        'total_resistance_events': len(events)
-    }), 200
-
-
-@app.route('/api/analytics/weekly', methods=['GET'])
-@token_required
-def get_weekly_analytics(current_user):
-    """Real 7-day completion data for analytics chart"""
-    today = datetime.now().date()
-    days_data = []
-    
-    for i in range(6, -1, -1):
-        target_date = today - timedelta(days=i)
-        day_tasks = Task.query.join(Task.goal).filter(
-            Task.goal.has(user_id=current_user.id),
-            Task.scheduled_date == target_date
-        ).all()
-        
-        total = len(day_tasks)
-        completed = sum(1 for t in day_tasks if t.status == 'completed')
-        rate = round(completed / total * 100) if total > 0 else 0
-        
-        days_data.append({
-            'date': target_date.isoformat(),
-            'day': target_date.strftime('%a'),
-            'total': total,
-            'completed': completed,
-            'completion_rate': rate
-        })
-    
-    engine = BehavioralIntelligenceEngine(current_user)
-    analysis = engine.full_analysis()
-    
-    return jsonify({
-        'weekly_data': analysis["completion_trend"],
-        'burnout_risk': analysis["burnout_risk"],
-        'burnout_message': analysis["burnout_message"]
-    }), 200
-
-
 # ============= DAILY LOG ROUTES =============
+
 
 @app.route('/api/daily-log', methods=['POST'])
 @token_required
@@ -1512,19 +1425,16 @@ def get_dashboard(current_user):
     deadline_risks = []
     feasibility_data = []
     for goal in active_goals:
-        sched_engine = SchedulingEngine(current_user, goal)
-        f_score, f_risk, f_consequence = sched_engine.calculate_feasibility_score()
-        
+        # Single engine instantiation — calculate_feasibility_score is called once per goal
+        engine = SchedulingEngine(current_user, goal)
+        f_score, f_risk, f_consequence = engine.calculate_feasibility_score()
+
         deadline_risks.append({
             'goal_id': goal.id,
             'goal_title': goal.title,
             'risk_level': f_risk,
             'message': f_consequence
         })
-        
-        # Include feasibility for each goal
-        engine = SchedulingEngine(current_user, goal)
-        f_score, f_risk, f_consequence = engine.calculate_feasibility_score()
         feasibility_data.append({
             'goal_id': goal.id,
             'goal_title': goal.title,
@@ -1564,18 +1474,19 @@ def get_nudges(current_user):
 
 
 @app.route('/api/stats/active-users', methods=['GET'])
-def get_active_users():
+@token_required
+def get_active_users(current_user):
     """
-    Developer Note: 
-    This is currently returning a weighted random number for demonstration purposes 
-    (e.g., for pitch/hackathon demos).
-    TODO: Implement real WebSocket-based connection counting.
+    Developer Note:
+    Returns a synthetic weighted count for demo purposes.
+    The 'synthetic: true' flag in the response makes this explicit to API consumers.
+    TODO: Replace with real WebSocket-based connection counting before production.
     """
     import random
     hour = datetime.now().hour
     base = 120 if 9 <= hour <= 23 else 40
     count = base + random.randint(0, 30)
-    return jsonify({'active_count': count}), 200
+    return jsonify({'active_count': count, 'synthetic': True}), 200
 
 
 # ============= STAGE 4: MILESTONES =============

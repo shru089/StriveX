@@ -2,37 +2,45 @@
 StriveX Analytics & Conversion Tracking
 Advanced behavioral analytics for product optimization
 """
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, User, Goal, Task, DailyLog
-from sqlalchemy import func, extract, cast, Date
+from flask import Blueprint, jsonify, request  # type: ignore
+from models import db, User, Goal, Task, DailyLog, BehaviorEvent  # type: ignore
+from sqlalchemy import func, extract, cast, Date  # type: ignore
 from datetime import datetime, timedelta
 from collections import defaultdict
+from functools import wraps
 import json
-from loguru import logger
+from loguru import logger  # type: ignore
+from intelligence import BehavioralIntelligenceEngine  # type: ignore
 
 analytics = Blueprint('analytics', __name__)
+
+
+# ---------------------------------------------------------------------------
+# Auth helper: import dynamically to avoid circular import at module load time
+# ---------------------------------------------------------------------------
+def _token_required(f):
+    """Thin wrapper that delegates to app.token_required, imported lazily."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        from app import token_required as _tr  # type: ignore # noqa: PLC0415
+        return _tr(f)(*args, **kwargs)
+    return decorated
 
 
 # ════════════════════════════════════════════════════════════
 # CONVERSION FUNNEL TRACKING
 # ════════════════════════════════════════════════════════════
 
-@analytics.route('/api/analytics/funnel', methods=['GET'])
-@jwt_required()
-def get_conversion_funnel():
+@analytics.route('/funnel', methods=['GET'])
+@_token_required
+def get_conversion_funnel(current_user):
     """
     Get conversion funnel metrics.
     Tracks: Signups → Activated → First Goal → Premium → Retained
     
     Returns drop-off points and conversion rates.
     """
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
-    
+    # current_user is guaranteed by @_token_required
     # Calculate funnel stages
     total_users = User.query.count()
     
@@ -99,21 +107,108 @@ def get_conversion_funnel():
 
 
 # ════════════════════════════════════════════════════════════
+# MOVED FROM app.py (Consolidation)
+# ════════════════════════════════════════════════════════════
+
+@analytics.route('/patterns', methods=['GET'])
+@_token_required
+def get_patterns(current_user):
+    try:
+        engine = BehavioralIntelligenceEngine(current_user)
+        patterns = engine.full_analysis()
+        return jsonify(patterns), 200
+    except Exception as e:
+        logger.error(f'Pattern analysis error: {e}')
+        return jsonify({'patterns': [], 'recommendations': [], 'burnout_risk': False}), 200
+
+
+@analytics.route('/deadline-risk/<int:goal_id>', methods=['GET'])
+@_token_required
+def get_deadline_risk(current_user, goal_id):
+    goal = Goal.query.filter_by(id=goal_id, user_id=current_user.id).first()
+    if not goal:
+        return jsonify({'error': 'Goal not found'}), 404
+
+    try:
+        # Compute progress inline from tasks (Goal model has no 'progress' or 'end_date' fields)
+        tasks = goal.tasks
+        total_tasks = len(tasks)
+        completed_tasks = sum(1 for t in tasks if t.status == 'completed')
+        progress = round(float(completed_tasks / max(1, total_tasks) * 100))
+        days_left = (goal.deadline - datetime.utcnow().date()).days if goal.deadline else 999
+        if days_left < 3 and progress < 80:
+            risk_level, message = 'high', f'Only {days_left}d left with {progress}% done — push hard!'
+        elif days_left < 7 and progress < 50:
+            risk_level, message = 'high', f'Less than a week and only {progress}% complete.'
+        elif days_left < 14 and progress < 30:
+            risk_level, message = 'medium', 'Falling behind — consider re-prioritising.'
+        else:
+            risk_level, message = 'low', 'On track — keep the momentum!'
+    except Exception:
+        progress = 0
+        risk_level, message = 'low', 'Keep going!'
+
+    return jsonify({'risk_level': risk_level, 'message': message, 'progress_pct': progress}), 200
+
+
+@analytics.route('/heatmap', methods=['GET'])
+@_token_required
+def get_heatmap(current_user):
+    """PRD 6.2: Procrastination heatmap data — resistance events by hour/day"""
+    events = BehaviorEvent.query.filter_by(user_id=current_user.id).filter(
+        BehaviorEvent.event_type.in_(['skip', 'start_late', 'hover'])
+    ).order_by(BehaviorEvent.timestamp.desc()).limit(500).all()
+    
+    # Aggregate by day_of_week × hour_of_day
+    grid = {}
+    for event in events:
+        metadata = json.loads(event.metadata_json) if event.metadata_json else {}
+        hour = metadata.get('hour_of_day', event.timestamp.hour)
+        day = metadata.get('day_of_week', event.timestamp.weekday())
+        key = f"{day}_{hour}"
+        grid[key] = grid.get(key, 0) + 1
+    
+    # Build 7×24 grid
+    heatmap = [[0] * 24 for _ in range(7)]
+    for key, count in grid.items():
+        parts = key.split('_')
+        if len(parts) == 2:
+            d, h = int(parts[0]), int(parts[1])
+            heatmap[d][h] = count
+    
+    return jsonify({
+        'heatmap': heatmap,
+        'days': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        'total_resistance_events': len(events)
+    }), 200
+
+
+@analytics.route('/weekly', methods=['GET'])
+@_token_required
+def get_weekly_analytics(current_user):
+    """Real 7-day completion data for analytics chart"""
+    engine = BehavioralIntelligenceEngine(current_user)
+    analysis = engine.full_analysis()
+    
+    return jsonify({
+        'weekly_data': analysis["completion_trend"],
+        'burnout_risk': analysis["burnout_risk"],
+        'burnout_message': analysis["burnout_message"]
+    }), 200
+
+
+# ════════════════════════════════════════════════════════════
 # USER BEHAVIORAL ANALYTICS
 # ════════════════════════════════════════════════════════════
 
-@analytics.route('/api/analytics/user-behavior', methods=['GET'])
-@jwt_required()
-def get_user_behavior():
+@analytics.route('/user-behavior', methods=['GET'])
+@_token_required
+def get_user_behavior(current_user):
     """
     Deep dive into individual user behavior patterns.
     Shows productivity rhythms, task completion rates, etc.
     """
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
+    user = current_user
     
     # Time-based analysis
     tasks = Task.query.join(Task.goal).filter(
@@ -139,7 +234,7 @@ def get_user_behavior():
             daily_completion[dow]['total'] += 1
     
     # Task category performance
-    category_stats = defaultdict(lambda: {'completed': 0, 'total': 0, 'avg_hours': 0})
+    category_stats = defaultdict(lambda: {'completed': 0, 'total': 0, 'avg_hours': 0.0})
     for task in tasks:
         category = task.goal.title[:20] if task.goal else 'Uncategorized'
         category_stats[category]['total'] += 1
@@ -147,8 +242,8 @@ def get_user_behavior():
             category_stats[category]['completed'] += 1
         if task.estimated_hours:
             category_stats[category]['avg_hours'] = (
-                category_stats[category]['avg_hours'] + task.estimated_hours
-            ) / 2
+                float(category_stats[category]['avg_hours']) + float(task.estimated_hours)
+            ) / 2.0
     
     behavior_data = {
         'hourly_productivity': [
@@ -156,28 +251,29 @@ def get_user_behavior():
                 'hour': hour,
                 'completed': data['completed'],
                 'scheduled': data['total'],
-                'success_rate': round(data['completed'] / max(1, data['total']) * 100, 2)
+                'success_rate': round(float(data['completed'] / max(1, data['total']) * 100), 2)  # type: ignore
             }
             for hour, data in sorted(hourly_completion.items())
         ],
         'daily_productivity': [
             {
-                'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][dow],
+                'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][int(dow)],
                 'completed': data['completed'],
                 'scheduled': data['total'],
-                'success_rate': round(data['completed'] / max(1, data['total']) * 100, 2)
+                'success_rate': round(float(data['completed'] / max(1, int(data['total']))) * 100, 2)  # type: ignore
             }
             for dow, data in sorted(daily_completion.items())
+            if isinstance(dow, (int, float)) and 0 <= int(dow) < 7
         ],
         'category_performance': [
             {
-                'category': cat,
+                'category': str(cat),
                 'completed': data['completed'],
                 'total': data['total'],
-                'success_rate': round(data['completed'] / max(1, data['total']) * 100, 2),
-                'avg_hours': round(data['avg_hours'], 1)
+                'success_rate': round(float(data['completed'] / max(1, int(data['total']))) * 100, 2),  # type: ignore
+                'avg_hours': round(float(data['avg_hours']), 1)  # type: ignore
             }
-            for cat, data in sorted(category_stats.items(), key=lambda x: x[1]['total'], reverse=True)[:10]
+            for cat, data in sorted(category_stats.items(), key=lambda x: x[1]['total'] if isinstance(x[1], dict) else 0, reverse=True)[:10]  # type: ignore
         ]
     }
     
@@ -200,13 +296,14 @@ def generate_behavioral_insights(user, data):
             peak_rate = hour_data['success_rate']
             peak_hour = hour_data['hour']
     
-    if peak_hour:
-        time_of_day = "morning" if peak_hour < 12 else "afternoon" if peak_hour < 17 else "evening"
+    if peak_hour is not None:
+        p_hour = int(peak_hour)  # type: ignore
+        time_of_day = "morning" if p_hour < 12 else "afternoon" if p_hour < 17 else "evening"
         insights.append({
             'type': 'optimization',
-            'title': f'Your Peak Time: {peak_hour}:00 {time_of_day}',
+            'title': f'Your Peak Time: {p_hour}:00 {time_of_day}',
             'description': f'You complete {peak_rate:.0f}% of tasks scheduled at this time',
-            'action': f'Schedule your most important tasks between {peak_hour-1}:00 and {peak_hour+1}:00'
+            'action': f'Schedule your most important tasks between {max(0, p_hour-1)}:00 and {min(23, p_hour+1)}:00'
         })
     
     # Weakest day
@@ -241,22 +338,21 @@ def generate_behavioral_insights(user, data):
 # GOAL SUCCESS PREDICTION
 # ════════════════════════════════════════════════════════════
 
-@analytics.route('/api/analytics/goal-success-prediction/<int:goal_id>', methods=['GET'])
-@jwt_required()
-def predict_goal_success(goal_id):
+@analytics.route('/goal-success-prediction/<int:goal_id>', methods=['GET'])
+@_token_required
+def predict_goal_success(current_user, goal_id):
     """
     Predict likelihood of goal completion based on historical patterns.
     Uses similar goals, user velocity, and risk factors.
     """
-    current_user_id = get_jwt_identity()
     goal = Goal.query.get(goal_id)
     
-    if not goal or goal.user_id != current_user_id:
+    if not goal or goal.user_id != current_user.id:
         return jsonify({'error': 'Goal not found'}), 404
     
     # Find similar historical goals
     similar_goals = Goal.query.filter(
-        Goal.user_id == current_user_id,
+        Goal.user_id == current_user.id,
         Goal.id != goal_id,
         Goal.status.in_(['completed', 'abandoned'])
     ).all()
@@ -266,9 +362,10 @@ def predict_goal_success(goal_id):
         # Simple text similarity based on title overlap
         words1 = set(g1.title.lower().split())
         words2 = set(g2.title.lower().split())
-        return len(words1 & words2) / len(words1 | words2) if words1 | words2 else 0
+        return len(words1 & words2) / len(words1 | words2) if words1 | words2 else 0.0
     
-    most_similar = sorted(similar_goals, key=lambda g: calculate_similarity(goal, g), reverse=True)[:5]
+    # Cast base collection to list to ensure slicing works in IDE
+    most_similar = sorted(cast(list, similar_goals), key=lambda g: calculate_similarity(goal, g), reverse=True)[:5]  # type: ignore
     
     # Historical success rate with similar goals
     completed_similar = sum(1 for g in most_similar if g.status == 'completed')
@@ -290,7 +387,7 @@ def predict_goal_success(goal_id):
     
     prediction = {
         'goal_id': goal_id,
-        'success_probability': round((base_success_rate * 0.4 + task_completion_rate * 0.6) * 100, 1),
+        'success_probability': round(float((base_success_rate * 0.4 + task_completion_rate * 0.6) * 100), 1),  # type: ignore
         'confidence': 'high' if len(most_similar) >= 3 else 'medium' if len(most_similar) >= 1 else 'low',
         'factors': {
             'historical_similarity': f'{base_success_rate*100:.1f}%',
@@ -302,22 +399,23 @@ def predict_goal_success(goal_id):
     }
     
     # Generate recommendations
+    recs = cast(list, prediction['recommendations'])
     if hours_per_day_needed > 4:
-        prediction['recommendations'].append({
+        recs.append({
             'priority': 'high',
             'action': 'Extend deadline or reduce scope',
             'reason': f'You need {hours_per_day_needed:.1f} hrs/day — unsustainable pace'
         })
     
     if task_completion_rate < 0.3 and days_until_deadline < 14:
-        prediction['recommendations'].append({
+        recs.append({
             'priority': 'high',
             'action': 'Focus on quick wins',
             'reason': 'Behind schedule with limited time remaining'
         })
     
     if base_success_rate < 0.5:
-        prediction['recommendations'].append({
+        recs.append({
             'priority': 'medium',
             'action': 'Review past failures',
             'reason': 'Similar goals have low completion rate for you'
@@ -330,18 +428,14 @@ def predict_goal_success(goal_id):
 # CHURN RISK ASSESSMENT
 # ════════════════════════════════════════════════════════════
 
-@analytics.route('/api/analytics/churn-risk', methods=['GET'])
-@jwt_required()
-def assess_churn_risk():
+@analytics.route('/churn-risk', methods=['GET'])
+@_token_required
+def assess_churn_risk(current_user):
     """
     Identify users at risk of churning based on behavior patterns.
     Enables proactive intervention.
     """
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
+    user = current_user
     
     risk_score = 0  # 0-100, higher = more likely to churn
     risk_factors = []
