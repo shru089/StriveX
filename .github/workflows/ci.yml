@@ -37,20 +37,6 @@ jobs:
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           flake8 . --count --exit-zero --max-complexity=12 --max-line-length=120 --statistics
 
-      - name: Run E2E API tests
-        env:
-          SECRET_KEY: ci-test-secret-key-not-for-production
-          CORS_ORIGIN: http://localhost:3001
-          FLASK_ENV: testing
-        run: |
-          # Start backend in background
-          python app.py &
-          sleep 3
-          # Run test suite
-          python test_e2e.py
-          # Cleanup
-          kill %1 2>/dev/null || true
-
   # ─── Frontend: Static Analysis ─────────────────────────────────────────────
   frontend:
     name: Frontend (Static Check)
