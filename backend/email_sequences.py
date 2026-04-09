@@ -402,9 +402,14 @@ def calculate_user_stats(user):
     ).count()
     
     # Estimate focus minutes (from Pomodoro sessions)
-    import json
-    pomodoro_data = json.loads(localStorage.getItem('sx_pomodoro') or '{}')
-    focus_minutes = pomodoro_data.get('sessions', 0) * 25
+    # Since this is the backend, we can't access localStorage.
+    # We will estimate focus minutes based on completed task estimated hours.
+    focus_minutes = db.session.query(func.sum(Task.estimated_hours)).join(Task.goal).filter(
+        Task.goal.has(user_id=user.id),
+        Task.completed_at >= week_ago,
+        Task.status == 'completed'
+    ).scalar()
+    focus_minutes = int((focus_minutes or 0) * 60)
     
     return {
         'tasks_completed': tasks_completed,

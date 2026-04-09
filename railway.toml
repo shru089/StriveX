@@ -1,6 +1,6 @@
 [build]
-builder = "NIXPACKS"
-buildCommand = "pip install -r backend/requirements.txt"
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
 
 [deploy]
 startCommand = "cd backend && waitress-serve --port=$PORT app:app"
