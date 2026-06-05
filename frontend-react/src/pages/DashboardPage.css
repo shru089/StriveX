@@ -43,6 +43,7 @@
   margin-bottom: 20px;
   background: rgba(255, 255, 255, 0.025);
   border: 1px solid rgba(255, 255, 255, 0.06);
+  -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   position: relative;
   overflow: hidden;
@@ -1676,6 +1677,7 @@
   overflow: hidden;
   cursor: pointer;
   transition: filter 0.15s, transform 0.15s;
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }

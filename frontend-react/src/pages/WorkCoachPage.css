@@ -7,7 +7,7 @@
 .wc-back:hover { color: var(--text-primary); background: var(--bg-hover); }
 .wc-robot { text-align: center; font-size: 48px; margin: 16px 0 8px; animation: robotBob 2s ease-in-out infinite; }
 @keyframes robotBob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-.wc-card { background: rgba(20,21,23,0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 36px; backdrop-filter: blur(20px); box-shadow: 0 24px 64px rgba(0,0,0,0.4); }
+.wc-card { background: rgba(20,21,23,0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 36px; -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); box-shadow: 0 24px 64px rgba(0,0,0,0.4); }
 .wc-step { animation: stepIn 0.3s ease; }
 @keyframes stepIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 

@@ -2,7 +2,7 @@
 StriveX Automated Email Sequences
 Behavioral email triggers based on user actions and patterns
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from models import db, User, Goal, Task
 from intelligence import gemini
 import os
@@ -354,7 +354,7 @@ def check_and_send_scheduled_emails():
     logger.info("Running daily email sequence checks...")
     
     users = User.query.all()
-    today = datetime.utcnow().date()
+    today = datetime.now(timezone.utc).date()
     
     for user in users:
         try:
@@ -394,7 +394,7 @@ def calculate_user_stats(user):
     from sqlalchemy import func
     
     # Get tasks completed in last 7 days
-    week_ago = datetime.utcnow() - timedelta(days=7)
+    week_ago = datetime.now(timezone.utc) - timedelta(days=7)
     tasks_completed = Task.query.join(Task.goal).filter(
         Task.goal.has(user_id=user.id),
         Task.completed_at >= week_ago,
