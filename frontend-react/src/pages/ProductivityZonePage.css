@@ -57,8 +57,8 @@
 /* ─── Liquid Glass Widget ───────────────────────────────────────────────────── */
 .liquid-widget {
   background: rgba(6, 7, 10, 0.72) !important;
-  backdrop-filter: blur(32px) saturate(1.8) !important;
   -webkit-backdrop-filter: blur(32px) saturate(1.8) !important;
+  backdrop-filter: blur(32px) saturate(1.8) !important;
   border: 1px solid rgba(255,255,255,0.1) !important;
   border-radius: 24px !important;
   box-shadow: 
@@ -89,7 +89,7 @@
 }
 
 /* ─── Widget base ───────────────────────────────────────────────────────────── */
-.pz-widget { padding: 16px; min-width: 220px; user-select: none; z-index: 10; }
+.pz-widget { padding: 16px; min-width: 220px; -webkit-user-select: none; user-select: none; z-index: 10; }
 .pz-handle { font-size: 11px; color: rgba(255,255,255,0.25); margin-bottom: 12px; cursor: grab; letter-spacing: 0.05em; }
 .pz-handle:active { cursor: grabbing; }
 
