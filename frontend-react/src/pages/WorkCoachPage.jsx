@@ -6,6 +6,7 @@ import { generateWorkPlan, isAvailable as aiAvailable } from '../gemini'
 import db from '../db'
 import api from '../api'
 import { useAuth } from '../context/AuthContext'
+import DOMPurify from 'dompurify'
 import './WorkCoachPage.css'
 
 const ROLES = ['Software Engineer', 'Product Manager', 'Data Scientist', 'Designer', 'Student', 'Founder/CEO', 'Marketing', 'Sales', 'Researcher', 'Consultant']
@@ -121,6 +122,11 @@ export default function WorkCoachPage() {
   return (
     <div className="wc-page">
       <Toast />
+      <div className="bg-galaxy" />
+      <div className="bg-galaxy-2" />
+      <div className="bg-nebula bg-nebula-1" />
+      <div className="bg-nebula bg-nebula-2" />
+      <div className="bg-nebula bg-nebula-3" />
       <div className="bg-grid" />
       <div className="bg-glow bg-glow-1" />
 
@@ -230,9 +236,8 @@ export default function WorkCoachPage() {
               {plan && (
                 <div className="wc-coaching-text">
                   {plan.split('\n').filter(Boolean).map((line, i) => (
-                    <p key={i} style={line.startsWith('#') ? { fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' } : { color: 'var(--text-secondary)', marginBottom: '8px', lineHeight: '1.7' }}>
-                      {line.replace(/^#+\s*/, '')}
-                    </p>
+                    <p key={i} style={line.startsWith('#') ? { fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' } : { color: 'var(--text-secondary)', marginBottom: '8px', lineHeight: '1.7' }}
+                       dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(line.replace(/^#+\s*/, '')) }} />
                   ))}
                 </div>
               )}

@@ -94,6 +94,11 @@ export default function OnboardingPage() {
 
   return (
     <div className="ob-page">
+      <div className="bg-galaxy" />
+      <div className="bg-galaxy-2" />
+      <div className="bg-nebula bg-nebula-1" />
+      <div className="bg-nebula bg-nebula-2" />
+      <div className="bg-nebula bg-nebula-3" />
       <div className="bg-grid" />
       <div className="bg-glow bg-glow-1" />
 

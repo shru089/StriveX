@@ -197,6 +197,8 @@ def add_security_headers(response):
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(self)'
+    # Basic Content Security Policy
+    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' http://localhost:5000 http://127.0.0.1:5000;"
     if request.is_secure:
         response.headers['Strict-Transport-Security'] = 'max-age=63072000; includeSubDomains'
     return response
@@ -261,8 +263,10 @@ def validate_password(password):
     return len(str(password)) >= 8
 
 def sanitize_str(value: Any, max_len: int = 500) -> str:
-    """Strip whitespace and truncate to max_len"""
+    """Strip whitespace, sanitize HTML, and truncate to max_len"""
+    import bleach
     s = str(value).strip()
+    s = bleach.clean(s)
     return s[:max_len]  # type: ignore[index]
 
 
@@ -586,6 +590,7 @@ def ai_daily_brief(current_user):
 # ============= AUTH ROUTES =============
 
 @app.route('/api/auth/register', methods=['POST'])
+@limiter.limit("5 per minute")
 def register():
     """
     Register a new user account

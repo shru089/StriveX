@@ -264,6 +264,13 @@ export default function DashboardPage() {
   return (
     <div className="db-page">
       <Toast />
+      <div className="bg-galaxy" />
+      <div className="bg-galaxy-2" />
+      <div className="bg-nebula bg-nebula-1" />
+      <div className="bg-nebula bg-nebula-2" />
+      <div className="bg-nebula bg-nebula-3" />
+      <div className="bg-grid" />
+      
       {/* Online/Offline indicator */}
       {!isOnline && (
         <div style={{

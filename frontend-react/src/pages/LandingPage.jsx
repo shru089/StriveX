@@ -188,6 +188,18 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Footer */}
+      <footer className="landing-footer">
+        <div className="footer-content">
+          <div className="footer-links">
+            <a href="/privacy" className="footer-link">Privacy Policy</a>
+            <span className="footer-divider">•</span>
+            <a href="#" className="footer-link">Terms of Service</a>
+          </div>
+          <p>© {new Date().getFullYear()} StriveX. All rights reserved.</p>
+        </div>
+      </footer>
+
       {/* Auth Modal */}
       {modal && (
         <div className="modal" onClick={(e) => e.target === e.currentTarget && setModal(null)}>

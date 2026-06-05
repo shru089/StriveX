@@ -9,6 +9,7 @@ import DashboardPage from './pages/DashboardPage'
 import WorkCoachPage from './pages/WorkCoachPage'
 import ProductivityZonePage from './pages/ProductivityZonePage'
 import BillingPage from './pages/BillingPage'
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import './styles/globals.css'
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
         <InstallPrompt />
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/onboarding" element={
             <ProtectedRoute><OnboardingPage /></ProtectedRoute>
           } />

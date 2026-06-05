@@ -1,0 +1,100 @@
+/* PrivacyPolicyPage CSS */
+.privacy-page {
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  width: 100%;
+  background: #08090a;
+  padding-bottom: 60px;
+}
+
+.privacy-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.privacy-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32px 0;
+}
+
+.privacy-nav .nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.privacy-content {
+  background: rgba(20, 21, 23, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 48px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.privacy-content h1 {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.last-updated {
+  font-size: 0.9rem;
+  color: var(--text-tertiary);
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.privacy-section {
+  margin-bottom: 32px;
+}
+
+.privacy-section h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 16px;
+}
+
+.privacy-section p {
+  margin-bottom: 16px;
+}
+
+.privacy-section ul {
+  padding-left: 24px;
+  margin-bottom: 16px;
+}
+
+.privacy-section li {
+  margin-bottom: 12px;
+}
+
+.privacy-section li strong {
+  color: #fff;
+}
+
+.privacy-footer {
+  text-align: center;
+  padding: 40px 0 0;
+  color: var(--text-tertiary);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 600px) {
+  .privacy-content {
+    padding: 32px 24px;
+  }
+}
