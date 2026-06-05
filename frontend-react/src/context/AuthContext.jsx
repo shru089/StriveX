@@ -4,6 +4,7 @@ import api from '../api'
 import db from '../db'
 
 const AuthContext = createContext(null)
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext)
 
 export function AuthProvider({ children }) {
@@ -18,6 +19,7 @@ export function AuthProvider({ children }) {
     if (token && savedUser) {
       try {
         const u = JSON.parse(savedUser)
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setUser(u)
         // Hydrate localStorage from backend in background
         db.hydrateFromCloud().catch(() => {})
@@ -25,8 +27,10 @@ export function AuthProvider({ children }) {
     } else {
       // Check if guest session active
       const guestActive = localStorage.getItem('sx_guest_mode') === '1'
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (guestActive) setIsGuest(true)
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(false)
   }, [])
 
@@ -48,7 +52,7 @@ export function AuthProvider({ children }) {
     localStorage.setItem('sx_current_user', JSON.stringify(u))
     // Hydrate cloud data into localStorage
     await db.hydrateFromCloud()
-    if (!u.onboarding_complete) navigate('/onboarding')
+    if (!u.wake_time) navigate('/onboarding')
     else navigate('/dashboard')
     return u
   }

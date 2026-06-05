@@ -126,7 +126,7 @@ function exportAllData() {
     URL.revokeObjectURL(url)
     
     showToast('💾 Data exported successfully!', 'success')
-  } catch (error) {
+  } catch {
     showToast('❌ Export failed', 'error')
   }
 }

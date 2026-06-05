@@ -1,8 +1,9 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import './Toast.css'
 
 let toastIdCounter = 0;
 let _showToast = null;
+// eslint-disable-next-line react-refresh/only-export-components
 export const showToast = (msg, type = 'info') => _showToast?.(msg, type);
 
 const Icons = {

@@ -15,8 +15,9 @@ export default function InstallPrompt() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall)
 
-    // Check if already installed
+    // Check if already installed — synchronous check is intentional
     if (window.matchMedia('(display-mode: standalone)').matches) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShow(false)
     }
 

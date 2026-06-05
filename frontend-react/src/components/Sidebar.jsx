@@ -2,9 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import StriveXLogo from './StriveXLogo'
-import { showToast } from './Toast'
 import LiquidNotif from './LiquidNotif'
-import db from '../db'
 import './Sidebar.css'
 
 const NAV = [
@@ -46,7 +44,7 @@ const COMING_SOON = {
 export default function Sidebar({ activeView, onViewChange }) {
   const { user, isGuest, logout } = useAuth()
   const navigate = useNavigate()
-  const [syncing, setSyncing] = useState(false)
+  const [syncing] = useState(false)
   const [notif, setNotif] = useState(null) // key from COMING_SOON
 
   const showNotif = (key) => setNotif(key)

@@ -63,21 +63,21 @@ export default function BillingPage() {
   const [usage, setUsage] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    fetchUsage()
-  }, [])
-
-  async function fetchUsage() {
+  const fetchUsage = async () => {
     try {
       const response = await api.get('/billing/usage')
       const data = response.data
-      
       setCurrentTier(data.tier || 'free')
       setUsage(data.ai_breakdown)
-    } catch (error) {
-      console.error('Failed to fetch usage:', error)
+    } catch (err) {
+      console.error('Failed to fetch usage:', err)
     }
   }
+
+  useEffect(() => {
+    fetchUsage()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function handleUpgrade(tierId) {
     if (tierId === currentTier) return
@@ -88,6 +88,7 @@ export default function BillingPage() {
       const response = await api.post('/billing/create-checkout', { tier: tierId })
       
       // Redirect to Stripe Checkout (secure payment on Stripe's domain)
+      // eslint-disable-next-line react-hooks/immutability
       window.location.href = response.data.checkout_url
       
       showToast('Redirecting to secure checkout...', 'info')
@@ -104,6 +105,7 @@ export default function BillingPage() {
       const response = await api.post('/billing/customer-portal')
       
       // Redirect to Stripe Customer Portal
+      // eslint-disable-next-line react-hooks/immutability
       window.location.href = response.data.portal_url
       
       showToast('Opening subscription management...', 'info')
@@ -124,8 +126,9 @@ export default function BillingPage() {
       showToast(response.data.message, 'info')
       setCurrentTier('free')
       fetchUsage()
-    } catch (error) {
+    } catch (err) {
       showToast('Failed to cancel subscription', 'error')
+      console.error(err)
     }
   }
 

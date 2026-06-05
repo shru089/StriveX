@@ -63,7 +63,7 @@ export default function WorkCoachPage() {
       setAiPowered(Boolean(result.ai_powered))
       setSelectedTasks(new Set(t.map((_, i) => i)))
       setStep(4)
-    } catch (e) {
+    } catch {
       showToast('Something went wrong. Please try again.', 'error')
     } finally { setLoading(false) }
   }

@@ -10,43 +10,48 @@ export default function LandingPage() {
   const { login, signup, continueAsGuest, loading, isAuthenticated } = useAuth()
   const [modal, setModal] = useState(null) // 'login' | 'signup' | null
   const [form, setForm] = useState({ email: '', password: '' })
+  const [error, setError] = useState('')
 
   // If already logged in, redirect
   useEffect(() => {
-    if (isAuthenticated) {
-      const u = JSON.parse(localStorage.getItem('user') || '{}')
+    if (!loading && isAuthenticated) {
+      const u = JSON.parse(localStorage.getItem('sx_current_user') || '{}')
       navigate(u?.wake_time ? '/dashboard' : '/onboarding', { replace: true })
     }
-  }, [])
+  }, [isAuthenticated, loading])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError('')
     try {
       if (modal === 'login') await login(form.email, form.password)
       else await signup(form.email, form.password)
     } catch (err) {
-      showToast(err?.response?.data?.error || 'Something went wrong', 'error')
+      const msg = err?.response?.data?.error || 'Something went wrong'
+      setError(msg)
+      showToast(msg, 'error')
     }
   }
 
   const features = [
-    { icon: '⚡', title: 'Replan My Day', desc: 'One button. Every task reshuffled in under 2 seconds.', tag: 'Core' },
-    { icon: '⌨️', title: 'NLP Command Bar', desc: 'Ctrl+K: "move gym to 6pm". Schedule updates instantly.' },
-    { icon: '📊', title: 'Feasibility Score', desc: 'Live 0–100% probability you\'ll hit your deadline.' },
-    { icon: '🧠', title: 'Behavioral AI', desc: '30-day profile. Auto-adapts to your real productivity patterns.', tag: 'Stage 4' },
-    { icon: '🤖', title: 'AI Work Coach', desc: 'Tell it your blockers. Get an instant action plan.' },
-    { icon: '🌿', title: 'Focus Zone', desc: 'Immersive workspace with ambient sounds & Pomodoro timer.' },
-    { icon: '🔥', title: 'XP & Levels', desc: 'Earn XP per task, maintain streaks, level up.' },
-    { icon: '📅', title: 'Calendar & Alarms', desc: 'Local events + browser notifications for alarms.' },
+    { icon: '⚡', title: 'Replan My Day', desc: 'One button. StriveX reshuffles every remaining task around your current time — in under 2 seconds.', tag: 'PRD Core' },
+    { icon: '⌨️', title: 'NLP Command Bar', desc: 'Press Ctrl+K and say "move gym to 6pm" or "add 2 hours deep work". Your schedule updates instantly.' },
+    { icon: '📊', title: 'Feasibility Score', desc: 'Live 0–100% probability you\'ll hit your deadline. Color-coded risk levels with consequence messaging.' },
+    { icon: '🧠', title: 'Behavioral Intelligence', desc: 'Tracks when you skip, hover, and start late. Builds a 30-day behavioral profile and auto-adjusts your schedule to match your real-world productivity patterns.', tag: 'Stage 4 · Live' },
+    { icon: '🔥', title: 'XP & Levels', desc: 'Earn XP per completed task, maintain streaks, and level up. Difficulty multipliers reward hard work.' },
+    { icon: '🔒', title: 'Privacy First', desc: 'Your behavioral data stays on your device. We never sell or share your productivity patterns.' },
   ]
 
   return (
     <div className="landing">
       <Toast />
-      {/* Animated BG */}
+      {/* Galaxy Background */}
+      <div className="bg-galaxy" />
+      <div className="bg-galaxy-2" />
+      <div className="bg-nebula bg-nebula-1" />
+      <div className="bg-nebula bg-nebula-2" />
+      <div className="bg-nebula bg-nebula-3" />
       <div className="bg-grid" />
-      <div className="bg-glow bg-glow-1" />
-      <div className="bg-glow bg-glow-2" />
 
       {/* Navbar */}
       <nav className="navbar">
@@ -143,7 +148,7 @@ export default function LandingPage() {
         <h2 className="section-title">Everything a <span className="gradient-text">proactive OS</span> needs</h2>
         <div className="features-grid">
           {features.map(f => (
-            <div key={f.title} className={`feature-card${f.tag === 'Core' || f.tag === 'Stage 4' ? ' feature-large' : ''}`}>
+            <div key={f.title} className={`feature-card${f.tag ? ' feature-large' : ''}`}>
               <div className={f.tag ? 'feature-icon-large' : 'feature-icon'}>{f.icon}</div>
               <h3>{f.title}</h3>
               <p>{f.desc}</p>

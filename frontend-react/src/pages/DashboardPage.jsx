@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import Toast, { showToast } from '../components/Toast'
@@ -38,6 +38,8 @@ function fmtTime(t) {
   const ampm = h >= 12 ? 'PM' : 'AM'
   return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`
 }
+// Alias used in calendar week view
+const fmt12 = fmtTime
 
 function isBlockActive(block) {
   const now = new Date()
@@ -198,10 +200,7 @@ export default function DashboardPage() {
     setAlarmTime(''); setAlarmLabel('')
   }
 
-  const { year, month, first, total } = (() => {
-    const y = calDate.getFullYear(), m = calDate.getMonth()
-    return { year: y, month: m, first: new Date(y, m, 1).getDay(), total: new Date(y, m + 1, 0).getDate() }
-  })()
+  // Calendar computed values are derived inline inside the calendar view IIFE below
 
   // ── Derived data ──────────────────────────────────────────────────────────────
   const todayStr = new Date().toISOString().split('T')[0]
@@ -597,7 +596,7 @@ export default function DashboardPage() {
           const weekDays = Array.from({ length: 7 }, (_, i) => {
             const d = new Date(startOfWeek); d.setDate(startOfWeek.getDate() + i); return d
           })
-          const HOURS        = Array.from({ length: 17 }, (_, i) => i + 7) // 7  AM – 11  PM
+          const HOURS = Array.from({ length: 17 }, (_, i) => i + 7) // 7 AM - 11 PM
           const PX_PER_MIN   = 1.15
 
           const blocks     = schedule?.blocks || []

@@ -73,7 +73,7 @@ function makeNoise(ctx, type) {
   
   if (type === 'fire') {
     // Pink noise for fire crackling
-    let b0=0, b1=0, b2=0, b3=0, b4=0, b5=0, b6=0
+    let b0=0, b1=0, b2=0, b3=0, b4=0, b5=0
     for (let i = 0; i < dL.length; i++) {
       const w = Math.random() * 2 - 1
       b0 = 0.99886 * b0 + w * 0.0555179
@@ -184,7 +184,7 @@ function useParticles(canvasRef, scene) {
     }
     
     const config = getConfig()
-    const particles = Array.from({ length: config.count }, (_, i) => ({
+    const particles = Array.from({ length: config.count }, () => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
       r: Math.random() * (config.size[1] - config.size[0]) + config.size[0],
@@ -564,21 +564,8 @@ export default function ProductivityZonePage() {
   const [widgets, setWidgets] = useState({ pomodoro: true, clock: true, sound: true, todo: false })
   const audioCtxRef = useRef(null)
 
-  // Pomodoro persistence
-  useEffect(() => {
-    const saved = localStorage.getItem('sx_pomodoro')
-    if (saved) {
-      const data = JSON.parse(saved)
-      setMode(data.mode || 'focus')
-      setSecs(data.secs || 25 * 60)
-      setRunning(data.running || false)
-      setSessions(data.sessions || 0)
-    }
-  }, [])
-
-  useEffect(() => {
-    localStorage.setItem('sx_pomodoro', JSON.stringify({ mode, secs, running, sessions }))
-  }, [mode, secs, running, sessions])
+  // Pomodoro state is managed inside PomodoroWidget component
+  // Persistence is handled there via its own local state
 
   useParticles(canvasRef, scene)
 

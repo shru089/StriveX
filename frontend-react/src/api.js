@@ -11,7 +11,7 @@ const api = axios.create({
 
 // ── Request interceptor: attach JWT ──
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken')
+  const token = localStorage.getItem('access_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
@@ -40,7 +40,7 @@ api.interceptors.response.use(
       }
       original._retry = true
       isRefreshing = true
-      const refreshToken = localStorage.getItem('refreshToken')
+      const refreshToken = localStorage.getItem('refresh_token')
       if (!refreshToken) {
         localStorage.clear()
         window.location.href = '/'
@@ -49,8 +49,8 @@ api.interceptors.response.use(
       try {
         const res = await axios.post(`${API_URL}/auth/refresh`, { refresh_token: refreshToken })
         const { access_token, refresh_token } = res.data
-        localStorage.setItem('authToken', access_token)
-        if (refresh_token) localStorage.setItem('refreshToken', refresh_token)
+        localStorage.setItem('access_token', access_token)
+        if (refresh_token) localStorage.setItem('refresh_token', refresh_token)
         processQueue(null, access_token)
         original.headers.Authorization = `Bearer ${access_token}`
         return api(original)

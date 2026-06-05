@@ -135,11 +135,7 @@ export default function AchievementBadges() {
   const [newBadges, setNewBadges] = useState([])
   const [showAll, setShowAll] = useState(false)
 
-  useEffect(() => {
-    checkAchievements()
-  }, [])
-
-  function checkAchievements() {
+  const checkAchievements = () => {
     // Calculate user stats
     const todos = db.getTodos()
     const tasksCompleted = todos.filter(t => t.completed).length
@@ -205,6 +201,11 @@ export default function AchievementBadges() {
     setBadges(earnedBadges)
     localStorage.setItem('sx_badges', JSON.stringify(earnedBadges))
   }
+
+  useEffect(() => {
+    checkAchievements()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <>
