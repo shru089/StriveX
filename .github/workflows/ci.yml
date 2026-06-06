@@ -63,8 +63,9 @@ jobs:
       - name: Check for console.log with sensitive data patterns
         run: |
           echo "Checking for sensitive data patterns in frontend JS..."
-          if grep -rn "console.log.*token\|console.log.*password\|console.log.*secret" frontend/js/ --include="*.js"; then
+          if grep -rn "console.log.*token\|console.log.*password\|console.log.*secret" frontend-react/src/ --include="*.js" --include="*.jsx"; then
             echo "WARNING: Potential sensitive data logging found!"
+            exit 1
           else
             echo "OK: No sensitive logging patterns found."
           fi
@@ -72,9 +73,10 @@ jobs:
       - name: Validate HTML structure
         run: |
           echo "Checking required PWA meta tags..."
-          for file in frontend/index.html frontend/dashboard.html frontend/onboarding.html; do
-            grep -q 'manifest.json' "$file" && echo "OK: $file has manifest link" || echo "MISSING: $file needs manifest link"
-            grep -q 'serviceWorker' "$file" && echo "OK: $file has SW registration" || echo "MISSING: $file needs SW registration"
+          for file in frontend-react/index.html; do
+            if [ -f "$file" ]; then
+              grep -q 'manifest.json' "$file" && echo "OK: $file has manifest link" || echo "MISSING: $file needs manifest link"
+            fi
           done
 
   # ─── Security: Dependency Audit ────────────────────────────────────────────

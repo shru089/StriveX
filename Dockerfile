@@ -30,6 +30,7 @@ USER strivex
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PATH="/home/strivex/.local/bin:$PATH" \
+    PYTHONPATH="/home/strivex/.local/lib/python3.11/site-packages" \
     PORT=5001
 
 EXPOSE 5001
