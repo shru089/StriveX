@@ -39,5 +39,5 @@ EXPOSE 5001
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5001/api/health')"
 
-# Production server: waitress (no Flask dev server in prod)
-CMD ["sh", "-c", "python -m waitress --host=0.0.0.0 --port=${PORT} app:app"]
+# Production server: gunicorn with eventlet for WebSocket support
+CMD ["sh", "-c", "gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:${PORT} app:app"]

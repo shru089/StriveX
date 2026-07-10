@@ -2044,4 +2044,4 @@ app.register_blueprint(autopsy, url_prefix='/api/autopsy')
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=False, port=5001)
+    socketio.run(app, host='0.0.0.0', debug=False, port=5001)
